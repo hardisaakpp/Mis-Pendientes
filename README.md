@@ -9,8 +9,14 @@ Este proyecto es una aplicación simple de lista de tareas (To-do List) desarrol
 - Interfaz sencilla y fácil de usar
 
 ## Estructura del proyecto
-- `index.html`: Archivo principal con la estructura de la aplicación.
-- (Agrega aquí otros archivos relevantes si existen, como CSS o JS)
+- `frontend/`: Carpeta principal del frontend
+  - `index.html`: Archivo principal con la estructura de la aplicación.
+  - `app.js`: Lógica de la aplicación frontend.
+  - `style.css`: Estilos de la aplicación.
+  - `assets/`: Archivos estáticos como íconos o imágenes.
+    - `business-to-do-list-flat-icon-modern-style-free-vector.ico`: Ícono de la app.
+- `backend/`: Carpeta del backend (Node.js + Express + SQLite)
+  - `server.js`, `package.json`, etc.
 
 ## Cómo usar
 1. Clona o descarga este repositorio.
