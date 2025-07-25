@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mis Pendientes</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container-flex">
+    <div class="container">
+      <h1>Mis Pendientes</h1>
+      <form id="task-form">
+        <input type="text" id="task-input" placeholder="Nueva tarea..." required />
+        <select id="category-select">
+          <option value="trabajo">Trabajo</option>
+          <option value="estudios">Estudios</option>
+          <option value="otras">Otras</option>
+        </select>
+        <button type="submit">Agregar</button>
+      </form>
+      <div class="filters">
+        <button data-filter="todas" class="active">Todas</button>
+        <button data-filter="trabajo">Trabajo</button>
+        <button data-filter="estudios">Estudios</button>
+        <button data-filter="otras">Otras</button>
+      </div>
+      <!-- Nuevo input y botón para categorías -->
+      <input type="text" id="category-name-input" placeholder="Nombre de la categoría">
+      <button id="add-category-btn">Nueva Categoría</button>
+      <button id="manage-categories-btn" type="button">Administrar Categorías</button>
+      <ul id="category-list" style="display:none;"></ul>
+    </div>
+    <div class="completed-container">
+      <h2>Tareas Pendientes</h2>
+      <ul id="task-list"></ul>
+    </div>
+    <div class="completed-container">
+      <h2>Tareas en Progreso</h2>
+      <ul id="in-progress-task-list"></ul>
+    </div>
+    <div class="completed-container">
+      <h2>Tareas Completadas</h2>
+      <ul id="completed-task-list"></ul>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html> 
