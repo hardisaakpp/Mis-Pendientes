@@ -32,16 +32,22 @@
       <ul id="category-list" style="display:none;"></ul>
     </div>
     <div class="completed-container">
-      <h2>Tareas Pendientes</h2>
-      <ul id="task-list"></ul>
+      <button class="accordion-toggle" data-target="task-list">
+        <span class="arrow">▶</span> Tareas Pendientes
+      </button>
+      <ul id="task-list" class="accordion-content"></ul>
     </div>
     <div class="completed-container">
-      <h2>Tareas en Progreso</h2>
-      <ul id="in-progress-task-list"></ul>
+      <button class="accordion-toggle" data-target="in-progress-task-list">
+        <span class="arrow">▶</span> Tareas en Progreso
+      </button>
+      <ul id="in-progress-task-list" class="accordion-content"></ul>
     </div>
     <div class="completed-container">
-      <h2>Tareas Completadas</h2>
-      <ul id="completed-task-list"></ul>
+      <button class="accordion-toggle" data-target="completed-task-list">
+        <span class="arrow">▶</span> Tareas Completadas
+      </button>
+      <ul id="completed-task-list" class="accordion-content"></ul>
     </div>
   </div>
   <script src="app.js"></script>

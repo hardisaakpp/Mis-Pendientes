@@ -378,6 +378,45 @@ h1 {
 button, input[type="button"], input[type="submit"], .filters button, #category-list button, #manage-categories-btn, #add-category-btn, .delete-btn, .edit-btn, .save-btn, .in-progress-btn, .complete-btn, .to-pending-btn, .to-in-progress-btn {
   cursor: pointer !important;
 }
+.accordion-toggle {
+  width: 100%;
+  background: none;
+  border: none;
+  outline: none;
+  text-align: left;
+  font-size: 1.1em;
+  font-weight: 600;
+  color: #1976d2;
+  padding: 0.7em 0.5em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  transition: background 0.2s;
+}
+.accordion-toggle:hover {
+  background: #e3f2fd;
+}
+.accordion-toggle .arrow {
+  display: inline-block;
+  transition: transform 0.2s;
+  font-size: 1.2em;
+}
+.accordion-toggle.active .arrow {
+  transform: rotate(90deg);
+}
+.accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s cubic-bezier(0.4,0,0.2,1);
+  padding: 0;
+  margin: 0;
+}
+.accordion-content.open {
+  max-height: 1000px;
+  transition: max-height 0.5s cubic-bezier(0.4,0,0.2,1);
+  margin-bottom: 0.7em;
+}
 @media (max-width: 900px) {
   .container-flex {
     flex-direction: column;
@@ -405,6 +444,10 @@ button, input[type="button"], input[type="submit"], .filters button, #category-l
     margin: 6px;
     padding: 12px 7px 7px 7px;
   }
+  .completed-container {
+    max-height: 50vh;
+    overflow-y: auto;
+  }
 }
 @media (max-width: 600px) {
   #task-form {
@@ -425,5 +468,9 @@ button, input[type="button"], input[type="submit"], .filters button, #category-l
     min-width: 80px;
     max-width: 100%;
     font-size: 0.98rem;
+  }
+  .completed-container {
+    max-height: 45vh;
+    overflow-y: auto;
   }
 } 

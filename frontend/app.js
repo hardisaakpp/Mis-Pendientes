@@ -533,6 +533,22 @@ function showConfirmModal(message) {
   });
 }
 
+// --- Acordeón para secciones de tareas ---
+document.addEventListener('DOMContentLoaded', () => {
+  const toggles = document.querySelectorAll('.accordion-toggle');
+  toggles.forEach(toggle => {
+    const targetId = toggle.getAttribute('data-target');
+    const content = document.getElementById(targetId);
+    // Por defecto, cerrado
+    content.classList.remove('open');
+    toggle.classList.remove('active');
+    toggle.addEventListener('click', () => {
+      const isOpen = content.classList.toggle('open');
+      toggle.classList.toggle('active', isOpen);
+    });
+  });
+});
+
 // Inicializar
 (async function init() {
   await renderCategories();
