@@ -27,6 +27,8 @@ body {
   flex: 1 1 250px;
   max-width: 340px;
   min-height: 220px;
+  position: relative;
+  /* Asegura que el encabezado siempre esté visible */
 }
 .completed-container h2 {
   margin-top: 0;
@@ -393,6 +395,12 @@ button, input[type="button"], input[type="submit"], .filters button, #category-l
   align-items: center;
   gap: 0.5em;
   transition: background 0.2s;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #f0f4fa;
+  border-bottom: 1px solid #e3eafc;
+  box-shadow: 0 2px 4px rgba(25, 118, 210, 0.03);
 }
 .accordion-toggle:hover {
   background: #e3f2fd;
@@ -405,6 +413,21 @@ button, input[type="button"], input[type="submit"], .filters button, #category-l
 .accordion-toggle.active .arrow {
   transform: rotate(90deg);
 }
+.accordion-toggle.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+  background: #f5f5f5;
+  color: #888;
+}
+.empty-message {
+  color: #888;
+  font-size: 1em;
+  text-align: center;
+  padding: 1em 0.5em;
+  background: none;
+  border: none;
+}
 .accordion-content {
   max-height: 0;
   overflow: hidden;
@@ -413,7 +436,7 @@ button, input[type="button"], input[type="submit"], .filters button, #category-l
   margin: 0;
 }
 .accordion-content.open {
-  max-height: 1000px;
+  max-height: fit-content;
   transition: max-height 0.5s cubic-bezier(0.4,0,0.2,1);
   margin-bottom: 0.7em;
 }
@@ -442,7 +465,7 @@ button, input[type="button"], input[type="submit"], .filters button, #category-l
   }
   .container, .completed-container {
     margin: 6px;
-    padding: 12px 7px 7px 7px;
+    padding: 0px 7px 7px 7px;
   }
   .completed-container {
     max-height: 50vh;
