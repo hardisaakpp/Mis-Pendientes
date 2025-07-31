@@ -91,9 +91,8 @@ body {
 /* Ventana emergente de papelera */
 .trash-window {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  top: 0;
+  left: 0;
   width: 400px;
   max-width: 90vw;
   max-height: 80vh;

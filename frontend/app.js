@@ -238,12 +238,20 @@ function updateTrashIconIndicator(count) {
 // --- FUNCIONES PARA VENTANA EMERGENTE DE PAPELERA ---
 let isTrashWindowOpen = false;
 let isTrashWindowMaximized = false;
+let isTrashWindowMinimized = false;
 
 function openTrashWindow() {
   const trashWindow = document.getElementById('trash-window');
   const trashIcon = document.getElementById('trash-icon');
   
+  // Mostrar la ventana primero para poder calcular su tamaño
   trashWindow.style.display = 'flex';
+  
+  // Centrar la ventana al abrir usando el centro de la pantalla
+  const centerX = (window.innerWidth - 400) / 2;
+  const centerY = (window.innerHeight - 300) / 2;
+  trashWindow.style.transform = `translate(${centerX}px, ${centerY}px)`;
+  
   isTrashWindowOpen = true;
   trashIcon.style.display = 'none';
   
@@ -264,7 +272,8 @@ function closeTrashWindow() {
   
   // Resetear estados
   isTrashWindowMaximized = false;
-  trashWindow.classList.remove('maximized');
+  isTrashWindowMinimized = false;
+  trashWindow.classList.remove('maximized', 'minimized');
 }
 
 function maximizeTrashWindow() {
@@ -273,48 +282,120 @@ function maximizeTrashWindow() {
   if (isTrashWindowMaximized) {
     trashWindow.classList.remove('maximized');
     isTrashWindowMaximized = false;
+    // Restaurar posición centrada
+    const centerX = (window.innerWidth - 400) / 2;
+    const centerY = (window.innerHeight - 300) / 2;
+    trashWindow.style.transform = `translate(${centerX}px, ${centerY}px)`;
   } else {
     trashWindow.classList.add('maximized');
     isTrashWindowMaximized = true;
+    // Centrar la ventana maximizada
+    const centerX = (window.innerWidth - 90) / 2; // 90vw centrado
+    const centerY = (window.innerHeight - 90) / 2; // 90vh centrado
+    trashWindow.style.transform = `translate(${centerX}px, ${centerY}px)`;
   }
+  
+  isTrashWindowMinimized = false;
+  trashWindow.classList.remove('minimized');
 }
 
-
+function minimizeTrashWindow() {
+  const trashWindow = document.getElementById('trash-window');
+  
+  if (isTrashWindowMinimized) {
+    trashWindow.classList.remove('minimized');
+    isTrashWindowMinimized = false;
+  } else {
+    trashWindow.classList.add('minimized');
+    isTrashWindowMinimized = true;
+  }
+  
+  isTrashWindowMaximized = false;
+  trashWindow.classList.remove('maximized');
+}
 
 function makeWindowDraggable() {
   const trashWindow = document.getElementById('trash-window');
   const header = trashWindow.querySelector('.trash-window-header');
   
   let isDragging = false;
-  let currentX;
-  let currentY;
-  let initialX;
-  let initialY;
-  let xOffset = 0;
-  let yOffset = 0;
+  let startX;
+  let startY;
+  let initialTransformX = 0;
+  let initialTransformY = 0;
 
   header.addEventListener('mousedown', dragStart);
   document.addEventListener('mousemove', drag);
   document.addEventListener('mouseup', dragEnd);
 
   function dragStart(e) {
-    initialX = e.clientX - xOffset;
-    initialY = e.clientY - yOffset;
-    
-    if (e.target === header) {
-      isDragging = true;
+    // Solo permitir arrastre desde el header y no desde los botones
+    if (e.target.closest('.window-control-btn')) {
+      return;
     }
+    
+    // Obtener la posición actual de la ventana
+    const transform = trashWindow.style.transform;
+    let currentX = 0;
+    let currentY = 0;
+    
+    if (transform && transform !== 'none') {
+      const match = transform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+      if (match) {
+        currentX = parseInt(match[1]);
+        currentY = parseInt(match[2]);
+      }
+    }
+    
+    // Si la ventana está centrada, usar la posición real del elemento
+    if (transform && transform.includes('-50%')) {
+      const rect = trashWindow.getBoundingClientRect();
+      currentX = rect.left;
+      currentY = rect.top;
+    }
+    
+    initialTransformX = currentX;
+    initialTransformY = currentY;
+    
+    startX = e.clientX;
+    startY = e.clientY;
+    isDragging = true;
+    e.preventDefault();
   }
 
   function drag(e) {
     if (isDragging) {
       e.preventDefault();
-      currentX = e.clientX - initialX;
-      currentY = e.clientY - initialY;
-      xOffset = currentX;
-      yOffset = currentY;
       
-      setTranslate(currentX, currentY, trashWindow);
+      const deltaX = e.clientX - startX;
+      const deltaY = e.clientY - startY;
+      
+      const newX = initialTransformX + deltaX;
+      const newY = initialTransformY + deltaY;
+      
+      // Limitar la ventana dentro de los límites de la pantalla
+      const rect = trashWindow.getBoundingClientRect();
+      const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
+      
+      let finalX = newX;
+      let finalY = newY;
+      
+      // Limitar horizontalmente
+      if (newX < -rect.width / 2) {
+        finalX = -rect.width / 2;
+      } else if (newX > windowWidth - rect.width / 2) {
+        finalX = windowWidth - rect.width / 2;
+      }
+      
+      // Limitar verticalmente
+      if (newY < -rect.height / 2) {
+        finalY = -rect.height / 2;
+      } else if (newY > windowHeight - rect.height / 2) {
+        finalY = windowHeight - rect.height / 2;
+      }
+      
+      setTranslate(finalX, finalY, trashWindow);
     }
   }
 
@@ -323,8 +404,6 @@ function makeWindowDraggable() {
   }
 
   function dragEnd() {
-    initialX = currentX;
-    initialY = currentY;
     isDragging = false;
   }
 }
@@ -333,6 +412,7 @@ function makeWindowDraggable() {
 document.addEventListener('DOMContentLoaded', () => {
   const trashIcon = document.getElementById('trash-icon');
   const closeBtn = document.getElementById('close-trash');
+  const minimizeBtn = document.getElementById('minimize-trash');
   const maximizeBtn = document.getElementById('maximize-trash');
   
   // Abrir ventana al hacer clic en el icono
@@ -340,6 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Controles de la ventana
   closeBtn.addEventListener('click', closeTrashWindow);
+  minimizeBtn.addEventListener('click', minimizeTrashWindow);
   maximizeBtn.addEventListener('click', maximizeTrashWindow);
   
   // Cerrar ventana con Escape
