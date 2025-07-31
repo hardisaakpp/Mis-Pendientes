@@ -249,7 +249,7 @@ function openTrashWindow() {
   
   // Centrar la ventana al abrir usando el centro de la pantalla
   const centerX = (window.innerWidth - 400) / 2;
-  const centerY = (window.innerHeight - 300) / 2;
+  const centerY = (window.innerHeight - 300) / 2 - 180; // 50px más arriba
   trashWindow.style.transform = `translate(${centerX}px, ${centerY}px)`;
   
   isTrashWindowOpen = true;
@@ -284,7 +284,7 @@ function maximizeTrashWindow() {
     isTrashWindowMaximized = false;
     // Restaurar posición centrada
     const centerX = (window.innerWidth - 400) / 2;
-    const centerY = (window.innerHeight - 300) / 2;
+    const centerY = (window.innerHeight - 300) / 2 - 50; // 50px más arriba
     trashWindow.style.transform = `translate(${centerX}px, ${centerY}px)`;
   } else {
     trashWindow.classList.add('maximized');
