@@ -49,13 +49,30 @@
       </button>
       <ul id="completed-task-list" class="accordion-content"></ul>
     </div>
-    <div class="trash-container">
-      <button class="accordion-toggle" data-target="trash-task-list">
-        <span class="arrow">▶</span> 🗑️ Papelera de Reciclaje
-      </button>
-      <ul id="trash-task-list" class="accordion-content"></ul>
+  </div>
+  
+  <!-- Icono flotante de papelera -->
+  <div id="trash-icon" class="trash-icon" title="Papelera de Reciclaje">
+    🗑️
+  </div>
+  
+  <!-- Ventana emergente de papelera -->
+  <div id="trash-window" class="trash-window">
+    <div class="trash-window-header">
+      <div class="trash-window-title">
+        <span class="trash-icon-small">🗑️</span>
+        Papelera de Reciclaje
+      </div>
+      <div class="trash-window-controls">
+        <button id="maximize-trash" class="window-control-btn" title="Maximizar">□</button>
+        <button id="close-trash" class="window-control-btn" title="Cerrar">×</button>
+      </div>
+    </div>
+    <div class="trash-window-content">
+      <ul id="trash-task-list"></ul>
     </div>
   </div>
+  
   <script src="app.js"></script>
 </body>
 </html> 

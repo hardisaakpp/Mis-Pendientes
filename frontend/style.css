@@ -38,6 +38,176 @@ body {
   position: relative;
   border-left: 3px solid #e53935;
 }
+
+/* --- ESTILOS PARA PAPELERA FLOTANTE --- */
+.trash-icon {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #e53935 0%, #f44336 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(229, 57, 53, 0.3);
+  transition: all 0.3s ease;
+  z-index: 1000;
+  user-select: none;
+}
+
+.trash-icon:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 25px rgba(229, 57, 53, 0.4);
+}
+
+.trash-icon:active {
+  transform: scale(0.95);
+}
+
+.trash-icon.has-items::after {
+  content: attr(data-count);
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #ff5722;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Ventana emergente de papelera */
+.trash-window {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px;
+  max-width: 90vw;
+  max-height: 80vh;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  z-index: 1001;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #e0e0e0;
+}
+
+.trash-window.maximized {
+  width: 90vw;
+  height: 90vh;
+  max-width: 1200px;
+  max-height: 90vh;
+}
+
+
+
+.trash-window-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background: linear-gradient(135deg, #e53935 0%, #f44336 100%);
+  color: white;
+  cursor: move;
+  user-select: none;
+}
+
+.trash-window-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.trash-icon-small {
+  font-size: 18px;
+}
+
+.trash-window-controls {
+  display: flex;
+  gap: 5px;
+}
+
+.window-control-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+
+.window-control-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.window-control-btn:active {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.trash-window-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  background: #fafafa;
+}
+
+#trash-task-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#trash-task-list .task-item {
+  background: #ffeaea;
+  border-left: 3px solid #e53935;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+#trash-task-list .empty-message {
+  text-align: center;
+  color: #888;
+  padding: 40px 20px;
+  font-style: italic;
+}
+
+/* Overlay para cuando la ventana está abierta */
+.trash-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  display: none;
+}
+
 .completed-container h2 {
   margin-top: 0;
   font-size: 1.2em;

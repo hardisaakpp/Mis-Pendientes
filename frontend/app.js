@@ -143,7 +143,10 @@ function setActiveFilter(filter) {
   currentFilter = filter;
   renderCategories();
   renderTasks(currentFilter);
-  renderTrashTasks(); // Actualizar también la papelera al cambiar filtro
+  // Solo actualizar papelera si está abierta
+  if (isTrashWindowOpen) {
+    renderTrashTasks();
+  }
 }
 
 async function renderTasks(filter = 'todas') {
@@ -206,21 +209,158 @@ async function renderTasks(filter = 'todas') {
 async function renderTrashTasks() {
   const deletedTasks = await getDeletedTasks();
   const trashList = document.getElementById('trash-task-list');
-  const trashToggle = document.querySelector('.accordion-toggle[data-target="trash-task-list"]');
 
   // Limpiar lista
   trashList.innerHTML = '';
 
   if (deletedTasks.length === 0) {
     trashList.innerHTML = '<div class="empty-message">No hay tareas eliminadas</div>';
-    trashToggle.classList.add('disabled');
-    trashToggle.setAttribute('disabled', 'disabled');
   } else {
     deletedTasks.forEach(task => trashList.appendChild(createTrashTaskElement(task)));
-    trashToggle.classList.remove('disabled');
-    trashToggle.removeAttribute('disabled');
+  }
+  
+  // Actualizar indicador del icono
+  updateTrashIconIndicator(deletedTasks.length);
+}
+
+function updateTrashIconIndicator(count) {
+  const trashIcon = document.getElementById('trash-icon');
+  
+  if (count > 0) {
+    trashIcon.setAttribute('data-count', count);
+    trashIcon.classList.add('has-items');
+  } else {
+    trashIcon.removeAttribute('data-count');
+    trashIcon.classList.remove('has-items');
   }
 }
+
+// --- FUNCIONES PARA VENTANA EMERGENTE DE PAPELERA ---
+let isTrashWindowOpen = false;
+let isTrashWindowMaximized = false;
+
+function openTrashWindow() {
+  const trashWindow = document.getElementById('trash-window');
+  const trashIcon = document.getElementById('trash-icon');
+  
+  trashWindow.style.display = 'flex';
+  isTrashWindowOpen = true;
+  trashIcon.style.display = 'none';
+  
+  // Renderizar tareas eliminadas
+  renderTrashTasks();
+  
+  // Hacer la ventana arrastrable
+  makeWindowDraggable();
+}
+
+function closeTrashWindow() {
+  const trashWindow = document.getElementById('trash-window');
+  const trashIcon = document.getElementById('trash-icon');
+  
+  trashWindow.style.display = 'none';
+  isTrashWindowOpen = false;
+  trashIcon.style.display = 'flex';
+  
+  // Resetear estados
+  isTrashWindowMaximized = false;
+  trashWindow.classList.remove('maximized');
+}
+
+function maximizeTrashWindow() {
+  const trashWindow = document.getElementById('trash-window');
+  
+  if (isTrashWindowMaximized) {
+    trashWindow.classList.remove('maximized');
+    isTrashWindowMaximized = false;
+  } else {
+    trashWindow.classList.add('maximized');
+    isTrashWindowMaximized = true;
+  }
+}
+
+
+
+function makeWindowDraggable() {
+  const trashWindow = document.getElementById('trash-window');
+  const header = trashWindow.querySelector('.trash-window-header');
+  
+  let isDragging = false;
+  let currentX;
+  let currentY;
+  let initialX;
+  let initialY;
+  let xOffset = 0;
+  let yOffset = 0;
+
+  header.addEventListener('mousedown', dragStart);
+  document.addEventListener('mousemove', drag);
+  document.addEventListener('mouseup', dragEnd);
+
+  function dragStart(e) {
+    initialX = e.clientX - xOffset;
+    initialY = e.clientY - yOffset;
+    
+    if (e.target === header) {
+      isDragging = true;
+    }
+  }
+
+  function drag(e) {
+    if (isDragging) {
+      e.preventDefault();
+      currentX = e.clientX - initialX;
+      currentY = e.clientY - initialY;
+      xOffset = currentX;
+      yOffset = currentY;
+      
+      setTranslate(currentX, currentY, trashWindow);
+    }
+  }
+
+  function setTranslate(xPos, yPos, el) {
+    el.style.transform = `translate(${xPos}px, ${yPos}px)`;
+  }
+
+  function dragEnd() {
+    initialX = currentX;
+    initialY = currentY;
+    isDragging = false;
+  }
+}
+
+// --- EVENTOS PARA LA VENTANA EMERGENTE ---
+document.addEventListener('DOMContentLoaded', () => {
+  const trashIcon = document.getElementById('trash-icon');
+  const closeBtn = document.getElementById('close-trash');
+  const maximizeBtn = document.getElementById('maximize-trash');
+  
+  // Abrir ventana al hacer clic en el icono
+  trashIcon.addEventListener('click', openTrashWindow);
+  
+  // Controles de la ventana
+  closeBtn.addEventListener('click', closeTrashWindow);
+  maximizeBtn.addEventListener('click', maximizeTrashWindow);
+  
+  // Cerrar ventana con Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isTrashWindowOpen) {
+      closeTrashWindow();
+    }
+  });
+  
+  // Cerrar ventana al hacer clic fuera de ella
+  document.addEventListener('click', (e) => {
+    const trashWindow = document.getElementById('trash-window');
+    const trashIcon = document.getElementById('trash-icon');
+    
+    if (isTrashWindowOpen && 
+        !trashWindow.contains(e.target) && 
+        !trashIcon.contains(e.target)) {
+      closeTrashWindow();
+    }
+  });
+});
 
 function createTaskElement(task, section) {
       const li = document.createElement('li');
@@ -385,7 +525,12 @@ function createTaskElement(task, section) {
   del.addEventListener('click', async () => {
     await deleteTask(task.id);
     await renderTasks(currentFilter);
-    await renderTrashTasks(); // Actualizar papelera en tiempo real
+    // Actualizar indicador del icono
+    await checkTrashStatus();
+    // Solo actualizar papelera si está abierta
+    if (isTrashWindowOpen) {
+      await renderTrashTasks();
+    }
       });
       li.appendChild(info);
       li.appendChild(del);
@@ -464,6 +609,7 @@ function createTrashTaskElement(task) {
     await restoreTask(task.id);
     await renderTrashTasks();
     await renderTasks(currentFilter); // Actualizar la lista principal
+    await checkTrashStatus(); // Actualizar indicador del icono
   });
   info.appendChild(restoreBtn);
   const permanentDeleteBtn = document.createElement('button');
@@ -476,6 +622,7 @@ function createTrashTaskElement(task) {
       await permanentlyDeleteTask(task.id);
       await renderTrashTasks();
       await renderTasks(currentFilter); // Actualizar la lista principal
+      await checkTrashStatus(); // Actualizar indicador del icono
     }
   });
   info.appendChild(permanentDeleteBtn);
@@ -506,7 +653,10 @@ form.addEventListener('submit', async e => {
   await saveTask({ text, completed: 0, inProgress: 0, categories: [Number(selectedCatId)] });
   input.value = '';
   await renderTasks(currentFilter);
-  await renderTrashTasks();
+  // Solo actualizar papelera si está abierta
+  if (isTrashWindowOpen) {
+    await renderTrashTasks();
+  }
 });
 
 // --- MODIFICADO: Lógica para crear nuevas categorías y permitir Enter ---
@@ -713,5 +863,11 @@ document.addEventListener('DOMContentLoaded', () => {
 (async function init() {
   await renderCategories();
   await renderTasks();
-  await renderTrashTasks();
-})(); 
+  // Verificar estado inicial de la papelera
+  await checkTrashStatus();
+})();
+
+async function checkTrashStatus() {
+  const deletedTasks = await getDeletedTasks();
+  updateTrashIconIndicator(deletedTasks.length);
+} 
