@@ -30,6 +30,14 @@ body {
   position: relative;
   /* Asegura que el encabezado siempre esté visible */
 }
+.trash-container {
+  background: #fff5f5;
+  flex: 1 1 250px;
+  max-width: 340px;
+  min-height: 220px;
+  position: relative;
+  border-left: 3px solid #e53935;
+}
 .completed-container h2 {
   margin-top: 0;
   font-size: 1.2em;
@@ -152,6 +160,19 @@ h1 {
   background: #e3eafc;
   opacity: 0.85;
 }
+.task-item.trash {
+  background: #ffeaea;
+  border-left: 3px solid #e53935;
+  opacity: 0.9;
+}
+.task-item.trash .task-category {
+  background: #ffcdd2;
+  color: #c62828;
+}
+.task-item.trash .task-category:hover {
+  background: #ef9a9a;
+  color: #b71c1c;
+}
 .task-info {
   display: flex;
   align-items: center;
@@ -193,6 +214,26 @@ h1 {
 .delete-btn:hover {
   color: #e53935;
   background: #ffeaea;
+}
+.restore-btn {
+  background: none;
+  border: none;
+  color: #388e3c;
+  font-size: 1.35rem;
+  cursor: pointer;
+  margin-left: 0.4rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s, color 0.2s;
+  vertical-align: middle;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+.restore-btn:hover {
+  color: #2e7d32;
+  background: #e8f5e9;
 }
 .edit-btn:hover, .save-btn:hover {
   color: #388e3c;
@@ -445,7 +486,7 @@ button, input[type="button"], input[type="submit"], .filters button, #category-l
     flex-direction: column;
     gap: 14px;
   }
-  .completed-container, .container {
+  .completed-container, .container, .trash-container {
     max-width: 100%;
     margin: 0;
   }
@@ -463,7 +504,7 @@ button, input[type="button"], input[type="submit"], .filters button, #category-l
   .task-item.in-progress .task-info {
     gap: 0.7rem;
   }
-  .container, .completed-container {
+  .container, .completed-container, .trash-container {
     margin: 6px;
     padding: 0px 7px 7px 7px;
   }

@@ -45,6 +45,20 @@ async function saveTask(task) {
 async function deleteTask(id) {
   return apiDelete(`/tasks/${id}`);
 }
+
+// --- FUNCIONES DE PAPELERA DE RECICLAJE ---
+async function getDeletedTasks() {
+  return apiGet('/tasks/deleted');
+}
+
+async function restoreTask(id) {
+  return apiPost(`/tasks/${id}/restore`, {});
+}
+
+async function permanentlyDeleteTask(id) {
+  return apiDelete(`/tasks/${id}/permanent`);
+}
+
 async function getCategories() {
   return apiGet('/categories');
 }
@@ -129,6 +143,7 @@ function setActiveFilter(filter) {
   currentFilter = filter;
   renderCategories();
   renderTasks(currentFilter);
+  renderTrashTasks(); // Actualizar también la papelera al cambiar filtro
 }
 
 async function renderTasks(filter = 'todas') {
@@ -185,6 +200,25 @@ async function renderTasks(filter = 'todas') {
     completedTasks.forEach(task => completedList.appendChild(createTaskElement(task, 'completed')));
     completedToggle.classList.remove('disabled');
     completedToggle.removeAttribute('disabled');
+  }
+}
+
+async function renderTrashTasks() {
+  const deletedTasks = await getDeletedTasks();
+  const trashList = document.getElementById('trash-task-list');
+  const trashToggle = document.querySelector('.accordion-toggle[data-target="trash-task-list"]');
+
+  // Limpiar lista
+  trashList.innerHTML = '';
+
+  if (deletedTasks.length === 0) {
+    trashList.innerHTML = '<div class="empty-message">No hay tareas eliminadas</div>';
+    trashToggle.classList.add('disabled');
+    trashToggle.setAttribute('disabled', 'disabled');
+  } else {
+    deletedTasks.forEach(task => trashList.appendChild(createTrashTaskElement(task)));
+    trashToggle.classList.remove('disabled');
+    trashToggle.removeAttribute('disabled');
   }
 }
 
@@ -351,9 +385,101 @@ function createTaskElement(task, section) {
   del.addEventListener('click', async () => {
     await deleteTask(task.id);
     await renderTasks(currentFilter);
+    await renderTrashTasks(); // Actualizar papelera en tiempo real
       });
       li.appendChild(info);
       li.appendChild(del);
+  return li;
+}
+
+function createTrashTaskElement(task) {
+  const li = document.createElement('li');
+  li.className = 'task-item trash';
+  const info = document.createElement('div');
+  info.className = 'task-info';
+  const span = document.createElement('span');
+  span.textContent = task.text;
+  // Categorías
+  const cat = document.createElement('span');
+  cat.className = 'task-category';
+  let cats = Array.isArray(task.categories) ? task.categories : [];
+  cat.textContent = cats.map(c => c.name.charAt(0).toUpperCase() + c.name.slice(1)).join(', ');
+  cat.style.cursor = 'pointer';
+  cat.title = 'Haz clic para cambiar categoría(s)';
+  cat.addEventListener('click', async () => {
+    await renderCategories(); // refresca cache
+    const select = document.createElement('select');
+    select.multiple = true;
+    select.className = 'edit-multiselect';
+    categoriesCache.forEach(catOpt => {
+      const option = document.createElement('option');
+      option.value = catOpt.id;
+      option.textContent = catOpt.name.charAt(0).toUpperCase() + catOpt.name.slice(1);
+      if (cats.some(c => c.id === catOpt.id)) option.selected = true;
+      select.appendChild(option);
+    });
+    select.addEventListener('change', async () => {
+      const selected = Array.from(select.selectedOptions).map(opt => Number(opt.value));
+      // Si la selección es igual a la actual, cancelar edición
+      const prevIds = cats.map(c => c.id).sort().join(',');
+      const selIds = selected.slice().sort().join(',');
+      if (prevIds === selIds) {
+        cleanup();
+        renderTrashTasks();
+        return;
+      }
+      await saveTask({ ...task, categories: selected });
+      await renderTrashTasks();
+      await renderTasks(currentFilter); // Actualizar también la lista principal
+    });
+    // Cancelar con Escape o clic fuera
+    const handleCancel = (event) => {
+      if (event.type === 'keydown' && event.key === 'Escape') {
+        cleanup();
+        renderTrashTasks();
+      } else if (event.type === 'mousedown' && !info.contains(event.target)) {
+        cleanup();
+        renderTrashTasks();
+      }
+    };
+    function cleanup() {
+      document.removeEventListener('keydown', handleCancel);
+      document.removeEventListener('mousedown', handleCancel);
+    }
+    setTimeout(() => {
+      document.addEventListener('keydown', handleCancel);
+      document.addEventListener('mousedown', handleCancel);
+    }, 0);
+    info.replaceChild(select, cat);
+    select.focus();
+  });
+  info.appendChild(span);
+  info.appendChild(cat);
+  // Botones de acción
+  const restoreBtn = document.createElement('button');
+  restoreBtn.className = 'restore-btn';
+  restoreBtn.innerHTML = '↩️';
+  restoreBtn.title = 'Restaurar tarea';
+  restoreBtn.addEventListener('click', async () => {
+    await restoreTask(task.id);
+    await renderTrashTasks();
+    await renderTasks(currentFilter); // Actualizar la lista principal
+  });
+  info.appendChild(restoreBtn);
+  const permanentDeleteBtn = document.createElement('button');
+  permanentDeleteBtn.className = 'delete-btn'; // Usar la clase delete-btn para el botón de eliminar permanente
+  permanentDeleteBtn.innerHTML = '🗑️';
+  permanentDeleteBtn.title = 'Eliminar permanentemente';
+  permanentDeleteBtn.addEventListener('click', async () => {
+    const confirmed = await showConfirmModal(`¿Seguro que deseas eliminar permanentemente la tarea "${task.text}"?`);
+    if (confirmed) {
+      await permanentlyDeleteTask(task.id);
+      await renderTrashTasks();
+      await renderTasks(currentFilter); // Actualizar la lista principal
+    }
+  });
+  info.appendChild(permanentDeleteBtn);
+  li.appendChild(info);
   return li;
 }
 
@@ -380,6 +506,7 @@ form.addEventListener('submit', async e => {
   await saveTask({ text, completed: 0, inProgress: 0, categories: [Number(selectedCatId)] });
   input.value = '';
   await renderTasks(currentFilter);
+  await renderTrashTasks();
 });
 
 // --- MODIFICADO: Lógica para crear nuevas categorías y permitir Enter ---
@@ -586,4 +713,5 @@ document.addEventListener('DOMContentLoaded', () => {
 (async function init() {
   await renderCategories();
   await renderTasks();
+  await renderTrashTasks();
 })(); 

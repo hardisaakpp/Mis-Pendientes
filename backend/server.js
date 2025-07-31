@@ -24,7 +24,8 @@ db.serialize(() => {
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     text TEXT NOT NULL,
     completed INTEGER DEFAULT 0,
-    inProgress INTEGER DEFAULT 0
+    inProgress INTEGER DEFAULT 0,
+    deleted INTEGER DEFAULT 0
   )`);
   db.run(`CREATE TABLE IF NOT EXISTS task_categories (
     task_id INTEGER,
@@ -33,6 +34,9 @@ db.serialize(() => {
     FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
   )`);
+  
+  // Agregar columna deleted si no existe
+  db.run(`ALTER TABLE tasks ADD COLUMN deleted INTEGER DEFAULT 0`);
 });
 
 // --- ENDPOINTS DE CATEGORÍAS ---
@@ -70,7 +74,7 @@ app.put('/categories/:id', (req, res) => {
 
 // --- ENDPOINTS DE TAREAS ---
 app.get('/tasks', (req, res) => {
-  db.all('SELECT * FROM tasks', [], (err, tasks) => {
+  db.all('SELECT * FROM tasks WHERE deleted = 0', [], (err, tasks) => {
     if (err) return res.status(500).json({ error: err.message });
     // Obtener categorías asociadas a cada tarea
     const taskIds = tasks.map(t => t.id);
@@ -127,6 +131,39 @@ app.put('/tasks/:id', (req, res) => {
 });
 
 app.delete('/tasks/:id', (req, res) => {
+  db.run('UPDATE tasks SET deleted = 1 WHERE id = ?', [req.params.id], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ deleted: this.changes });
+  });
+});
+
+// --- ENDPOINTS DE PAPELERA DE RECICLAJE ---
+app.get('/tasks/deleted', (req, res) => {
+  db.all('SELECT * FROM tasks WHERE deleted = 1', [], (err, tasks) => {
+    if (err) return res.status(500).json({ error: err.message });
+    // Obtener categorías asociadas a cada tarea
+    const taskIds = tasks.map(t => t.id);
+    if (taskIds.length === 0) return res.json([]);
+    db.all(`SELECT tc.task_id, c.id as category_id, c.name FROM task_categories tc JOIN categories c ON tc.category_id = c.id WHERE tc.task_id IN (${taskIds.map(() => '?').join(',')})`, taskIds, (err2, catRows) => {
+      if (err2) return res.status(500).json({ error: err2.message });
+      const taskMap = {};
+      tasks.forEach(t => { taskMap[t.id] = { ...t, categories: [] }; });
+      catRows.forEach(row => {
+        taskMap[row.task_id].categories.push({ id: row.category_id, name: row.name });
+      });
+      res.json(Object.values(taskMap));
+    });
+  });
+});
+
+app.post('/tasks/:id/restore', (req, res) => {
+  db.run('UPDATE tasks SET deleted = 0 WHERE id = ?', [req.params.id], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ restored: this.changes });
+  });
+});
+
+app.delete('/tasks/:id/permanent', (req, res) => {
   db.run('DELETE FROM tasks WHERE id = ?', [req.params.id], function(err) {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ deleted: this.changes });

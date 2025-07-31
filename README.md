@@ -6,6 +6,9 @@ Este proyecto es una aplicación simple de lista de tareas (To-do List) desarrol
 - Agregar tareas
 - Marcar tareas como completadas
 - Eliminar tareas
+- Papelera de reciclaje para tareas eliminadas
+- Restaurar tareas desde la papelera
+- Eliminar permanentemente tareas
 - Interfaz sencilla y fácil de usar
 
 ## Estructura del proyecto
