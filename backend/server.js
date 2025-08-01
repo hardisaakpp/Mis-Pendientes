@@ -34,9 +34,6 @@ db.serialize(() => {
     FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
   )`);
-  
-  // Agregar columna deleted si no existe
-  db.run(`ALTER TABLE tasks ADD COLUMN deleted INTEGER DEFAULT 0`);
 });
 
 // --- ENDPOINTS DE CATEGORÍAS ---

@@ -59,6 +59,10 @@ async function permanentlyDeleteTask(id) {
   return apiDelete(`/tasks/${id}/permanent`);
 }
 
+async function deleteAllDeletedTasks() {
+  return apiDelete('/tasks/deleted/all');
+}
+
 async function getCategories() {
   return apiGet('/categories');
 }
@@ -237,7 +241,6 @@ function updateTrashIconIndicator(count) {
 
 // --- FUNCIONES PARA VENTANA EMERGENTE DE PAPELERA ---
 let isTrashWindowOpen = false;
-let isTrashWindowMaximized = false;
 let isTrashWindowMinimized = false;
 
 function openTrashWindow() {
@@ -271,33 +274,11 @@ function closeTrashWindow() {
   trashIcon.style.display = 'flex';
   
   // Resetear estados
-  isTrashWindowMaximized = false;
-  isTrashWindowMinimized = false;
-  trashWindow.classList.remove('maximized', 'minimized');
-}
-
-function maximizeTrashWindow() {
-  const trashWindow = document.getElementById('trash-window');
-  
-  if (isTrashWindowMaximized) {
-    trashWindow.classList.remove('maximized');
-    isTrashWindowMaximized = false;
-    // Restaurar posición centrada
-    const centerX = (window.innerWidth - 400) / 2;
-    const centerY = (window.innerHeight - 300) / 2 - 50; // 50px más arriba
-    trashWindow.style.transform = `translate(${centerX}px, ${centerY}px)`;
-  } else {
-    trashWindow.classList.add('maximized');
-    isTrashWindowMaximized = true;
-    // Centrar la ventana maximizada
-    const centerX = (window.innerWidth - 90) / 2; // 90vw centrado
-    const centerY = (window.innerHeight - 90) / 2; // 90vh centrado
-    trashWindow.style.transform = `translate(${centerX}px, ${centerY}px)`;
-  }
-  
   isTrashWindowMinimized = false;
   trashWindow.classList.remove('minimized');
 }
+
+
 
 function minimizeTrashWindow() {
   const trashWindow = document.getElementById('trash-window');
@@ -309,9 +290,6 @@ function minimizeTrashWindow() {
     trashWindow.classList.add('minimized');
     isTrashWindowMinimized = true;
   }
-  
-  isTrashWindowMaximized = false;
-  trashWindow.classList.remove('maximized');
 }
 
 function makeWindowDraggable() {
@@ -413,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const trashIcon = document.getElementById('trash-icon');
   const closeBtn = document.getElementById('close-trash');
   const minimizeBtn = document.getElementById('minimize-trash');
-  const maximizeBtn = document.getElementById('maximize-trash');
+  const deleteAllBtn = document.getElementById('delete-all-trash');
   
   // Abrir ventana al hacer clic en el icono
   trashIcon.addEventListener('click', openTrashWindow);
@@ -421,7 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Controles de la ventana
   closeBtn.addEventListener('click', closeTrashWindow);
   minimizeBtn.addEventListener('click', minimizeTrashWindow);
-  maximizeBtn.addEventListener('click', maximizeTrashWindow);
+  deleteAllBtn.addEventListener('click', deleteAllTrashTasks);
   
   // Cerrar ventana con Escape
   document.addEventListener('keydown', (e) => {
@@ -442,6 +420,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+async function deleteAllTrashTasks() {
+  const confirmed = await showConfirmModal('¿Seguro que deseas eliminar permanentemente todas las tareas de la papelera? Esta acción no se puede deshacer.');
+  if (confirmed) {
+    try {
+      const result = await deleteAllDeletedTasks();
+      console.log('Tareas eliminadas:', result);
+      await renderTrashTasks();
+      await checkTrashStatus(); // Actualizar indicador del icono
+    } catch (error) {
+      console.error('Error al eliminar todas las tareas:', error);
+      alert(`Error al eliminar las tareas: ${error.message || error}. Por favor, intenta de nuevo.`);
+    }
+  }
+}
 
 function createTaskElement(task, section) {
       const li = document.createElement('li');
