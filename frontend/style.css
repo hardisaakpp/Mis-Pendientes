@@ -212,7 +212,7 @@ body {
   padding: 10px 20px;
   font-size: 14px;
   font-weight: 600;
-  cursor: pointer;
+  cursor: default;
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(229, 57, 53, 0.2);
   display: flex;
@@ -220,15 +220,36 @@ body {
   gap: 8px;
 }
 
-.delete-all-btn:hover {
+.delete-all-btn:not(:disabled) {
+  cursor: pointer;
+}
+
+.delete-all-btn:hover:not(:disabled) {
   background: linear-gradient(135deg, #d32f2f 0%, #e53935 100%);
   box-shadow: 0 4px 12px rgba(229, 57, 53, 0.3);
   transform: translateY(-1px);
 }
 
-.delete-all-btn:active {
+.delete-all-btn:active:not(:disabled) {
   transform: translateY(0);
   box-shadow: 0 2px 6px rgba(229, 57, 53, 0.2);
+}
+
+.delete-all-btn:disabled {
+  background: #cccccc;
+  color: #888888;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+  opacity: 0.6;
+}
+
+.delete-all-btn:disabled:hover {
+  background: #cccccc;
+  color: #888888;
+  box-shadow: none;
+  transform: none;
+  cursor: not-allowed;
 }
 
 /* Overlay para cuando la ventana está abierta */
@@ -624,7 +645,7 @@ h1 {
   margin-bottom: 0.05rem;
 }
 button, input[type="button"], input[type="submit"], .filters button, #category-list button, #manage-categories-btn, #add-category-btn, .delete-btn, .edit-btn, .save-btn, .in-progress-btn, .complete-btn, .to-pending-btn, .to-in-progress-btn {
-  cursor: pointer !important;
+  cursor: pointer;
 }
 .accordion-toggle {
   width: 100%;

@@ -225,14 +225,25 @@ async function renderTasks(filter = 'todas') {
 async function renderTrashTasks() {
   const deletedTasks = await getDeletedTasks();
   const trashList = document.getElementById('trash-task-list');
+  const deleteAllBtn = document.getElementById('delete-all-trash');
 
   // Limpiar lista
   trashList.innerHTML = '';
 
   if (deletedTasks.length === 0) {
     trashList.innerHTML = '<div class="empty-message">No hay tareas eliminadas</div>';
+    // Deshabilitar el botón cuando no hay tareas
+    if (deleteAllBtn) {
+      deleteAllBtn.disabled = true;
+      deleteAllBtn.title = 'No hay tareas para eliminar';
+    }
   } else {
     deletedTasks.forEach(task => trashList.appendChild(createTrashTaskElement(task)));
+    // Habilitar el botón cuando hay tareas
+    if (deleteAllBtn) {
+      deleteAllBtn.disabled = false;
+      deleteAllBtn.title = 'Eliminar todas las tareas';
+    }
   }
   
   // Actualizar indicador del icono
@@ -286,7 +297,10 @@ function openTrashWindow() {
     
     newDeleteAllBtn.addEventListener('click', () => {
       console.log('Botón Eliminar Todo clickeado desde openTrashWindow');
-      deleteAllTrashTasks();
+      // Solo permitir clic si el botón no está deshabilitado
+      if (!newDeleteAllBtn.disabled) {
+        deleteAllTrashTasks();
+      }
     });
   } else {
     console.error('No se encontró el botón delete-all-trash en openTrashWindow');
@@ -466,7 +480,7 @@ async function deleteAllTrashTasks() {
       console.log('Intentando eliminar todas las tareas...');
       const result = await deleteAllDeletedTasks();
       console.log('Tareas eliminadas:', result);
-      await renderTrashTasks();
+      await renderTrashTasks(); // Esto también actualizará el estado del botón
       await checkTrashStatus(); // Actualizar indicador del icono
     } catch (error) {
       console.error('Error al eliminar todas las tareas:', error);
@@ -635,16 +649,16 @@ function createTaskElement(task, section) {
       del.className = 'delete-btn';
       del.innerHTML = '🗑️';
       del.title = 'Eliminar';
-  del.addEventListener('click', async () => {
+    del.addEventListener('click', async () => {
     await deleteTask(task.id);
     await renderTasks(currentFilter);
     // Actualizar indicador del icono
     await checkTrashStatus();
     // Solo actualizar papelera si está abierta
     if (isTrashWindowOpen) {
-      await renderTrashTasks();
+      await renderTrashTasks(); // Esto actualizará el estado del botón
     }
-      });
+  });
       li.appendChild(info);
       li.appendChild(del);
   return li;
@@ -720,7 +734,7 @@ function createTrashTaskElement(task) {
   restoreBtn.title = 'Restaurar tarea';
   restoreBtn.addEventListener('click', async () => {
     await restoreTask(task.id);
-    await renderTrashTasks();
+    await renderTrashTasks(); // Esto actualizará el estado del botón
     await renderTasks(currentFilter); // Actualizar la lista principal
     await checkTrashStatus(); // Actualizar indicador del icono
   });
@@ -733,7 +747,7 @@ function createTrashTaskElement(task) {
     const confirmed = await showConfirmModal(`¿Seguro que deseas eliminar permanentemente la tarea "${task.text}"?`);
     if (confirmed) {
       await permanentlyDeleteTask(task.id);
-      await renderTrashTasks();
+      await renderTrashTasks(); // Esto actualizará el estado del botón
       await renderTasks(currentFilter); // Actualizar la lista principal
       await checkTrashStatus(); // Actualizar indicador del icono
     }
