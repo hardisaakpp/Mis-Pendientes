@@ -26,9 +26,18 @@ async function apiPut(path, data) {
   return res.json();
 }
 async function apiDelete(path) {
+  console.log('apiDelete llamado con path:', path);
+  console.log('URL completa:', `${API_URL}${path}`);
   const res = await fetch(`${API_URL}${path}` , { method: 'DELETE' });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  console.log('Respuesta del servidor:', res.status, res.statusText);
+  if (!res.ok) {
+    const errorText = await res.text();
+    console.error('Error en apiDelete:', errorText);
+    throw new Error(errorText);
+  }
+  const result = await res.json();
+  console.log('Resultado de apiDelete:', result);
+  return result;
 }
 
 // --- FUNCIONES DE DATOS ---
@@ -60,7 +69,10 @@ async function permanentlyDeleteTask(id) {
 }
 
 async function deleteAllDeletedTasks() {
-  return apiDelete('/tasks/deleted/all');
+  console.log('deleteAllDeletedTasks llamado');
+  const result = await apiDelete('/tasks/deleted/all');
+  console.log('deleteAllDeletedTasks resultado:', result);
+  return result;
 }
 
 async function getCategories() {
@@ -263,6 +275,22 @@ function openTrashWindow() {
   
   // Hacer la ventana arrastrable
   makeWindowDraggable();
+  
+  // Agregar evento al botón de eliminar todo cuando la ventana se abre
+  const deleteAllBtn = document.getElementById('delete-all-trash');
+  if (deleteAllBtn) {
+    console.log('Agregando evento al botón delete-all-trash en openTrashWindow');
+    // Remover eventos anteriores para evitar duplicados
+    deleteAllBtn.replaceWith(deleteAllBtn.cloneNode(true));
+    const newDeleteAllBtn = document.getElementById('delete-all-trash');
+    
+    newDeleteAllBtn.addEventListener('click', () => {
+      console.log('Botón Eliminar Todo clickeado desde openTrashWindow');
+      deleteAllTrashTasks();
+    });
+  } else {
+    console.error('No se encontró el botón delete-all-trash en openTrashWindow');
+  }
 }
 
 function closeTrashWindow() {
@@ -390,16 +418,24 @@ function makeWindowDraggable() {
 document.addEventListener('DOMContentLoaded', () => {
   const trashIcon = document.getElementById('trash-icon');
   const closeBtn = document.getElementById('close-trash');
-  const minimizeBtn = document.getElementById('minimize-trash');
   const deleteAllBtn = document.getElementById('delete-all-trash');
+  
+  // Debug: verificar si los botones se encuentran
+  console.log('closeBtn encontrado:', closeBtn);
+  console.log('deleteAllBtn encontrado:', deleteAllBtn);
   
   // Abrir ventana al hacer clic en el icono
   trashIcon.addEventListener('click', openTrashWindow);
   
   // Controles de la ventana
-  closeBtn.addEventListener('click', closeTrashWindow);
-  minimizeBtn.addEventListener('click', minimizeTrashWindow);
-  deleteAllBtn.addEventListener('click', deleteAllTrashTasks);
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeTrashWindow);
+  } else {
+    console.error('No se encontró el botón close-trash');
+  }
+  
+  // El evento del botón delete-all-trash se agregará cuando se abra la ventana
+  console.log('Ventana de papelera inicializada');
   
   // Cerrar ventana con Escape
   document.addEventListener('keydown', (e) => {
@@ -422,9 +458,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function deleteAllTrashTasks() {
+  console.log('Función deleteAllTrashTasks ejecutada');
   const confirmed = await showConfirmModal('¿Seguro que deseas eliminar permanentemente todas las tareas de la papelera? Esta acción no se puede deshacer.');
+  console.log('Usuario confirmó:', confirmed);
   if (confirmed) {
     try {
+      console.log('Intentando eliminar todas las tareas...');
       const result = await deleteAllDeletedTasks();
       console.log('Tareas eliminadas:', result);
       await renderTrashTasks();

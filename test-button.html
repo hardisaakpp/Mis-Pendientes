@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Botón</title>
+  <style>
+    .delete-all-btn {
+      background: linear-gradient(135deg, #e53935 0%, #f44336 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(229, 57, 53, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .delete-all-btn:hover {
+      background: linear-gradient(135deg, #d32f2f 0%, #e53935 100%);
+      box-shadow: 0 4px 12px rgba(229, 57, 53, 0.3);
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body>
+  <h1>Test del Botón</h1>
+  <button id="delete-all-trash" class="delete-all-btn" title="Eliminar todas las tareas">🗑️ Eliminar Todo</button>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const deleteAllBtn = document.getElementById('delete-all-trash');
+      console.log('deleteAllBtn encontrado:', deleteAllBtn);
+      
+      if (deleteAllBtn) {
+        console.log('Agregando evento al botón');
+        deleteAllBtn.addEventListener('click', () => {
+          console.log('Botón clickeado!');
+          alert('¡Botón funcionando!');
+        });
+      } else {
+        console.error('No se encontró el botón');
+      }
+    });
+  </script>
+</body>
+</html> 

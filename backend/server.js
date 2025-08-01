@@ -167,6 +167,14 @@ app.delete('/tasks/:id/permanent', (req, res) => {
   });
 });
 
+// Endpoint para eliminar todas las tareas de la papelera
+app.delete('/tasks/deleted/all', (req, res) => {
+  db.run('DELETE FROM tasks WHERE deleted = 1', [], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ deleted: this.changes });
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Servidor backend escuchando en http://localhost:${PORT}`);
 }); 
