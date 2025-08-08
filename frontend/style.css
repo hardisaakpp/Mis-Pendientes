@@ -473,6 +473,10 @@ h1 {
   background: #f7fbff;
   margin-right: 0.5rem;
   transition: border 0.2s, box-shadow 0.2s;
+  min-height: 2.6rem; /* asegura 2 líneas cómodas */
+  resize: vertical;   /* permitir ampliar si se necesita */
+  width: 100%;
+  box-sizing: border-box;
 }
 .edit-input:focus {
   border: 1.5px solid #1976d2;

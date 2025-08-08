@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comprobación de Conexión - Backend</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(120deg, #e3f0ff 0%, #f4f6f8 100%);
+      margin: 0;
+      padding: 20px;
+      color: #222;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      color: #1976d2;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .status-card {
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      transition: all 0.3s ease;
+    }
+    .status-card.success {
+      border-color: #4caf50;
+      background: #f1f8e9;
+    }
+    .status-card.error {
+      border-color: #f44336;
+      background: #ffebee;
+    }
+    .status-card.loading {
+      border-color: #ff9800;
+      background: #fff3e0;
+    }
+    .status-icon {
+      font-size: 24px;
+      margin-right: 10px;
+    }
+    .status-text {
+      font-weight: 600;
+      font-size: 18px;
+    }
+    .details {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #666;
+    }
+    .details pre {
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    .check-button {
+      background: linear-gradient(90deg, #1976d2 60%, #42a5f5 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin: 10px 5px;
+    }
+    .check-button:hover {
+      background: linear-gradient(90deg, #1565c0 60%, #1976d2 100%);
+      transform: translateY(-1px);
+    }
+    .check-button:disabled {
+      background: #cccccc;
+      color: #888888;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .endpoints {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+    .endpoint {
+      margin: 10px 0;
+      padding: 8px;
+      background: white;
+      border-radius: 4px;
+      border-left: 4px solid #1976d2;
+    }
+    .endpoint strong {
+      color: #1976d2;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 Comprobación de Conexión - Backend</h1>
+    
+    <div id="status-card" class="status-card loading">
+      <div>
+        <span class="status-icon">⏳</span>
+        <span class="status-text">Verificando conexión...</span>
+      </div>
+      <div class="details">
+        <p>Haciendo ping al servidor backend...</p>
+      </div>
+    </div>
+    
+    <div style="text-align: center; margin: 20px 0;">
+      <button id="check-btn" class="check-button" onclick="checkConnection()">
+        🔄 Verificar Conexión
+      </button>
+      <button id="health-btn" class="check-button" onclick="checkHealth()">
+        🏥 Verificar Salud
+      </button>
+    </div>
+    
+    <div class="endpoints">
+      <h3>📋 Endpoints Disponibles:</h3>
+      <div class="endpoint">
+        <strong>GET /health</strong> - Estado del servidor
+      </div>
+      <div class="endpoint">
+        <strong>GET /tasks</strong> - Obtener tareas
+      </div>
+      <div class="endpoint">
+        <strong>POST /tasks</strong> - Crear tarea
+      </div>
+      <div class="endpoint">
+        <strong>PUT /tasks/:id</strong> - Actualizar tarea
+      </div>
+      <div class="endpoint">
+        <strong>DELETE /tasks/:id</strong> - Eliminar tarea
+      </div>
+      <div class="endpoint">
+        <strong>GET /tasks/deleted</strong> - Tareas eliminadas
+      </div>
+      <div class="endpoint">
+        <strong>DELETE /tasks/deleted/all</strong> - Eliminar todas las tareas de papelera
+      </div>
+      <div class="endpoint">
+        <strong>GET /categories</strong> - Obtener categorías
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:3001';
+    
+    async function checkConnection() {
+      const statusCard = document.getElementById('status-card');
+      const checkBtn = document.getElementById('check-btn');
+      
+      // Mostrar estado de carga
+      statusCard.className = 'status-card loading';
+      statusCard.innerHTML = `
+        <div>
+          <span class="status-icon">⏳</span>
+          <span class="status-text">Verificando conexión...</span>
+        </div>
+        <div class="details">
+          <p>Intentando conectar con ${API_URL}</p>
+        </div>
+      `;
+      
+      checkBtn.disabled = true;
+      
+      try {
+        const response = await fetch(`${API_URL}/health`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          statusCard.className = 'status-card success';
+          statusCard.innerHTML = `
+            <div>
+              <span class="status-icon">✅</span>
+              <span class="status-text">Conexión exitosa</span>
+            </div>
+            <div class="details">
+              <p><strong>Estado:</strong> ${data.status}</p>
+              <p><strong>Mensaje:</strong> ${data.message}</p>
+              <p><strong>Puerto:</strong> ${data.port}</p>
+              <p><strong>Base de datos:</strong> ${data.database}</p>
+              <p><strong>Timestamp:</strong> ${new Date(data.timestamp).toLocaleString()}</p>
+            </div>
+          `;
+        } else {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+      } catch (error) {
+        statusCard.className = 'status-card error';
+        statusCard.innerHTML = `
+          <div>
+            <span class="status-icon">❌</span>
+            <span class="status-text">Error de conexión</span>
+          </div>
+          <div class="details">
+            <p><strong>Error:</strong> ${error.message}</p>
+            <p><strong>URL:</strong> ${API_URL}/health</p>
+            <p><strong>Posibles causas:</strong></p>
+            <ul>
+              <li>El servidor backend no está ejecutándose</li>
+              <li>El puerto 3001 está ocupado</li>
+              <li>Problema de red o firewall</li>
+              <li>Error en la configuración del servidor</li>
+            </ul>
+          </div>
+        `;
+      } finally {
+        checkBtn.disabled = false;
+      }
+    }
+    
+    async function checkHealth() {
+      const statusCard = document.getElementById('status-card');
+      const healthBtn = document.getElementById('health-btn');
+      
+      // Mostrar estado de carga
+      statusCard.className = 'status-card loading';
+      statusCard.innerHTML = `
+        <div>
+          <span class="status-icon">🏥</span>
+          <span class="status-text">Verificando salud del servidor...</span>
+        </div>
+        <div class="details">
+          <p>Comprobando endpoints y servicios...</p>
+        </div>
+      `;
+      
+      healthBtn.disabled = true;
+      
+      try {
+        // Verificar múltiples endpoints
+        const endpoints = [
+          { name: 'Health Check', url: '/health' },
+          { name: 'Tareas', url: '/tasks' },
+          { name: 'Categorías', url: '/categories' },
+          { name: 'Papelera', url: '/tasks/deleted' }
+        ];
+        
+        const results = [];
+        
+        for (const endpoint of endpoints) {
+          try {
+            const response = await fetch(`${API_URL}${endpoint.url}`);
+            results.push({
+              name: endpoint.name,
+              status: response.ok ? '✅ OK' : `❌ ${response.status}`,
+              url: endpoint.url
+            });
+          } catch (error) {
+            results.push({
+              name: endpoint.name,
+              status: '❌ Error',
+              url: endpoint.url,
+              error: error.message
+            });
+          }
+        }
+        
+        statusCard.className = 'status-card success';
+        statusCard.innerHTML = `
+          <div>
+            <span class="status-icon">🏥</span>
+            <span class="status-text">Verificación de salud completada</span>
+          </div>
+          <div class="details">
+            <p><strong>Resultados de endpoints:</strong></p>
+            ${results.map(result => `
+              <p><strong>${result.name}:</strong> ${result.status}</p>
+            `).join('')}
+          </div>
+        `;
+        
+      } catch (error) {
+        statusCard.className = 'status-card error';
+        statusCard.innerHTML = `
+          <div>
+            <span class="status-icon">❌</span>
+            <span class="status-text">Error en verificación de salud</span>
+          </div>
+          <div class="details">
+            <p><strong>Error:</strong> ${error.message}</p>
+          </div>
+        `;
+      } finally {
+        healthBtn.disabled = false;
+      }
+    }
+    
+    // Verificar conexión automáticamente al cargar la página
+    window.addEventListener('load', () => {
+      setTimeout(checkConnection, 500);
+    });
+  </script>
+</body>
+</html> 

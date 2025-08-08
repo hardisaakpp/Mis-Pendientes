@@ -175,6 +175,17 @@ app.delete('/tasks/deleted/all', (req, res) => {
   });
 });
 
+// Endpoint de salud para verificar la conexión
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    message: 'Servidor funcionando correctamente',
+    timestamp: new Date().toISOString(),
+    port: PORT,
+    database: 'SQLite'
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Servidor backend escuchando en http://localhost:${PORT}`);
 }); 

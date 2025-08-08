@@ -600,16 +600,16 @@ function createTaskElement(task, section) {
       editBtn.innerHTML = '✏️';
       editBtn.title = 'Editar';
       editBtn.addEventListener('click', () => {
-        const inputEdit = document.createElement('input');
-        inputEdit.type = 'text';
-        inputEdit.value = task.text;
-        inputEdit.className = 'edit-input';
+        const textareaEdit = document.createElement('textarea');
+        textareaEdit.value = task.text;
+        textareaEdit.className = 'edit-input';
+        textareaEdit.rows = 2; // permitir dos líneas visibles
         const saveBtn = document.createElement('button');
         saveBtn.innerHTML = '💾';
         saveBtn.title = 'Guardar';
         saveBtn.className = 'save-btn';
         const saveAction = async () => {
-          const newText = inputEdit.value.trim();
+          const newText = textareaEdit.value.trim();
           if (newText) {
             await saveTask({ ...task, text: newText, categories: getCategoryIds(task) });
             await renderTasks(currentFilter);
@@ -619,8 +619,9 @@ function createTaskElement(task, section) {
           }
         };
         saveBtn.addEventListener('click', saveAction);
-        inputEdit.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') {
+        textareaEdit.addEventListener('keydown', (e) => {
+          // Enter guarda; Shift+Enter inserta salto de línea
+          if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             saveAction();
           }
@@ -639,9 +640,9 @@ function createTaskElement(task, section) {
           document.addEventListener('mousedown', handleClickOutside);
         }, 0);
         info.innerHTML = '';
-        info.appendChild(inputEdit);
+        info.appendChild(textareaEdit);
         info.appendChild(saveBtn);
-        inputEdit.focus();
+        textareaEdit.focus();
       });
       info.appendChild(editBtn);
   // Eliminar
