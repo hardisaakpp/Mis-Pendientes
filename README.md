@@ -145,4 +145,4 @@ npm start          # Inicia el servidor backend
 - Los estilos se han adaptado para mantener la consistencia visual
 
 ## 👨‍💻 Autor
-- Desarrollado por Isaac (o tu nombre aquí) 
+- Desarrollado por Isaac

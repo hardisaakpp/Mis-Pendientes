@@ -1,0 +1,189 @@
+<!-- Icono flotante de la papelera -->
+<div 
+  class="trash-icon" 
+  (click)="toggleRecycleBin()"
+  [class.active]="isOpen"
+  [class.has-items]="stats.total > 0"
+  [title]="'Papelera de Reciclaje (' + stats.total + ' elementos)'"
+>
+  🗑️
+  <span *ngIf="stats.total > 0" class="item-count">{{ stats.total > 99 ? '99+' : stats.total }}</span>
+</div>
+
+<!-- Ventana de la papelera -->
+<div 
+  *ngIf="isOpen"
+  class="recycle-bin-window"
+  [style.left.px]="windowPosition.x"
+  [style.top.px]="windowPosition.y"
+  [style.width.px]="windowSize.width"
+  [style.height.px]="windowSize.height"
+>
+  <!-- Barra de título (arrastrable) -->
+  <div class="window-header" (mousedown)="onMouseDown($event, 'drag')">
+    <div class="header-content">
+      <div class="header-title">
+        <span class="title-icon">🗑️</span>
+        <span class="title-text">Papelera de Reciclaje</span>
+        <span class="title-count" *ngIf="stats.total > 0">({{ stats.total }})</span>
+      </div>
+      <div class="header-actions">
+        <button 
+          class="header-btn minimize-btn"
+          (click)="closeRecycleBin()"
+          title="Minimizar"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 12H6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenido de la ventana -->
+  <div class="window-content">
+    <!-- Mensaje de error -->
+    <div *ngIf="errorMessage" class="error-message" (click)="clearError()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>{{ errorMessage }}</span>
+      <svg class="close-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <!-- Barra de herramientas -->
+    <div class="toolbar">
+      <div class="search-container">
+        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <input 
+          type="text" 
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="searchTasks()"
+          placeholder="Buscar tareas eliminadas..."
+          class="search-input"
+        />
+        <button 
+          *ngIf="searchTerm" 
+          (click)="clearSearch()" 
+          class="clear-search-btn"
+          title="Limpiar búsqueda"
+        >
+          ×
+        </button>
+      </div>
+      
+      <div class="toolbar-actions">
+        <button 
+          class="toolbar-btn empty-btn"
+          (click)="emptyRecycleBin()"
+          [disabled]="stats.total === 0 || isEmptying"
+          title="Vaciar papelera"
+        >
+          <svg *ngIf="!isEmptying" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <svg *ngIf="isEmptying" class="loading-spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          {{ isEmptying ? 'Vaciando...' : 'Vaciar' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="stats-bar" *ngIf="stats.total > 0">
+      <div class="stat-item">
+        <span class="stat-label">Total:</span>
+        <span class="stat-value">{{ stats.total }}</span>
+      </div>
+      <div class="stat-item" *ngIf="stats.oldest">
+        <span class="stat-label">Más antigua:</span>
+        <span class="stat-value">{{ getTimeAgo(stats.oldest) }}</span>
+      </div>
+      <div class="stat-item" *ngIf="stats.newest">
+        <span class="stat-label">Más reciente:</span>
+        <span class="stat-value">{{ getTimeAgo(stats.newest) }}</span>
+      </div>
+    </div>
+
+    <!-- Lista de tareas eliminadas -->
+    <div class="tasks-container">
+      <!-- Estado de carga -->
+      <div *ngIf="isLoading" class="loading-state">
+        <div class="loading-spinner-large"></div>
+        <p>Cargando tareas eliminadas...</p>
+      </div>
+
+      <!-- Estado vacío -->
+      <div *ngIf="!isLoading && filteredTasks.length === 0" class="empty-state">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 12l2 2 4-4M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <h4>Papelera vacía</h4>
+        <p *ngIf="searchTerm">No se encontraron tareas que coincidan con tu búsqueda</p>
+        <p *ngIf="!searchTerm">No hay tareas eliminadas. ¡Mantén tu espacio de trabajo limpio!</p>
+      </div>
+
+      <!-- Lista de tareas -->
+      <div *ngIf="!isLoading && filteredTasks.length > 0" class="deleted-tasks-list">
+        <div 
+          *ngFor="let task of filteredTasks; trackBy: trackByTaskId"
+          class="deleted-task-item"
+        >
+          <div class="task-info">
+            <div class="task-text">{{ task.text }}</div>
+            <div class="task-meta">
+              <span class="deleted-date" title="{{ formatDate(task.deletedAt) }}">
+                {{ getTimeAgo(task.deletedAt) }}
+              </span>
+              <span class="task-status" [class.completed]="task.completed">
+                {{ task.completed ? 'Completada' : 'Pendiente' }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="task-actions">
+            <button 
+              class="action-btn restore-btn"
+              (click)="restoreTask(task)"
+              [disabled]="isRestoring"
+              title="Restaurar tarea"
+            >
+              <svg *ngIf="!isRestoring" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 12a9 9 0 019-9 9.75 9.75 0 016.74 2.74L21 8M21 3v5h-5M3 12a9 9 0 009 9 9.75 9.75 0 006.74-2.74L3 16M3 21v-5h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <svg *ngIf="isRestoring" class="loading-spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              {{ isRestoring ? 'Restaurando...' : 'Restaurar' }}
+            </button>
+            
+            <button 
+              class="action-btn delete-btn"
+              (click)="deletePermanently(task)"
+              [disabled]="isDeleting"
+              title="Eliminar permanentemente"
+            >
+              <svg *ngIf="!isDeleting" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <svg *ngIf="isDeleting" class="loading-spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              {{ isDeleting ? 'Eliminando...' : 'Eliminar' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Control de redimensionamiento -->
+  <div class="resize-handle" (mousedown)="onMouseDown($event, 'resize')"></div>
+</div>
+

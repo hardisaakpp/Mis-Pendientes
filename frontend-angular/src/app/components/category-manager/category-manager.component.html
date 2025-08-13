@@ -1,0 +1,235 @@
+<div class="category-manager">
+  <!-- Header del gestor -->
+  <div class="category-manager-header">
+    <h2>📁 Gestión de Categorías</h2>
+    <p>Organiza y personaliza las categorías de tus tareas</p>
+  </div>
+
+  <!-- Mensaje de error -->
+  <div *ngIf="errorMessage" class="error-message" (click)="errorMessage = ''">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span>{{ errorMessage }}</span>
+    <svg class="close-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <!-- Formulario para agregar nueva categoría -->
+  <div class="add-category-section">
+    <h3>➕ Nueva Categoría</h3>
+    <form [formGroup]="addCategoryForm" (ngSubmit)="addCategory()" class="add-category-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="category-name">Nombre</label>
+          <input 
+            id="category-name"
+            type="text" 
+            formControlName="name"
+            placeholder="Ej: Trabajo, Estudios, Personal..."
+            class="form-input"
+            [class.error]="addCategoryForm.get('name')?.invalid && addCategoryForm.get('name')?.touched"
+          />
+          <div *ngIf="getFieldError(addCategoryForm, 'name')" class="field-error">
+            {{ getFieldError(addCategoryForm, 'name') }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="category-icon">Icono</label>
+          <div class="icon-selector">
+            <input 
+              id="category-icon"
+              type="text" 
+              formControlName="icon"
+              placeholder="📋"
+              class="form-input icon-input"
+              maxlength="2"
+            />
+            <div class="icon-preview">{{ addCategoryForm.get('icon')?.value || '📋' }}</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="category-color">Color</label>
+          <div class="color-selector">
+            <input 
+              id="category-color"
+              type="color" 
+              formControlName="color"
+              class="color-input"
+            />
+            <div class="color-preview" [style.background-color]="addCategoryForm.get('color')?.value"></div>
+          </div>
+        </div>
+      </div>
+
+      <button 
+        type="submit" 
+        class="add-button"
+        [disabled]="addCategoryForm.invalid || isAddingCategory"
+      >
+        <svg *ngIf="!isAddingCategory" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <svg *ngIf="isAddingCategory" class="loading-spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        {{ isAddingCategory ? 'Creando...' : 'Crear Categoría' }}
+      </button>
+    </form>
+  </div>
+
+  <!-- Barra de búsqueda -->
+  <div class="search-section">
+    <div class="search-container">
+      <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <input 
+        type="text" 
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="filterCategories()"
+        placeholder="Buscar categorías..."
+        class="search-input"
+      />
+      <button 
+        *ngIf="searchTerm" 
+        (click)="clearSearch()" 
+        class="clear-search-btn"
+        title="Limpiar búsqueda"
+      >
+        ×
+      </button>
+    </div>
+    <span class="search-results">{{ filteredCategories.length }} de {{ categories.length }} categorías</span>
+  </div>
+
+  <!-- Lista de categorías -->
+  <div class="categories-section">
+    <h3>📋 Categorías Existentes</h3>
+    
+    <!-- Estado de carga -->
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="loading-spinner-large"></div>
+      <p>Cargando categorías...</p>
+    </div>
+
+    <!-- Lista vacía -->
+    <div *ngIf="!isLoading && filteredCategories.length === 0" class="empty-state">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M9 12l2 2 4-4M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <h4>No hay categorías</h4>
+      <p *ngIf="searchTerm">No se encontraron categorías que coincidan con tu búsqueda</p>
+      <p *ngIf="!searchTerm">Crea tu primera categoría para comenzar a organizar tus tareas</p>
+    </div>
+
+    <!-- Lista de categorías -->
+    <div *ngIf="!isLoading && filteredCategories.length > 0" class="categories-list">
+      <div 
+        *ngFor="let category of filteredCategories; trackBy: trackByCategoryId"
+        class="category-item"
+        [class.dragging]="draggedCategory?.id === category.id"
+        [class.editing]="editingCategoryId === category.id"
+        draggable="true"
+        (dragstart)="onDragStart($event, category)"
+        (dragover)="onDragOver($event)"
+        (drop)="onDrop($event, category)"
+        (dragend)="onDragEnd()"
+      >
+        <!-- Información de la categoría -->
+        <div class="category-info">
+          <div class="category-icon" [style.background-color]="getCategoryBackground(category)">
+            <span [style.color]="getContrastColor(getCategoryBackground(category))">
+              {{ category.icon || '📋' }}
+            </span>
+          </div>
+          
+          <div class="category-details">
+            <span class="category-name">{{ category.name }}</span>
+            <span class="category-meta">
+              {{ category.taskCount || 0 }} tareas
+              <span *ngIf="category.order !== undefined" class="order-badge">
+                #{{ category.order + 1 }}
+              </span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Acciones de la categoría -->
+        <div class="category-actions">
+          <button 
+            *ngIf="editingCategoryId !== category.id"
+            (click)="startEditCategory(category)"
+            class="action-btn edit-btn"
+            title="Editar categoría"
+          >
+            ✏️
+          </button>
+          
+          <button 
+            *ngIf="editingCategoryId !== category.id"
+            (click)="deleteCategory(category)"
+            class="action-btn delete-btn"
+            title="Eliminar categoría"
+          >
+            🗑️
+          </button>
+        </div>
+
+        <!-- Formulario de edición inline -->
+        <div *ngIf="editingCategoryId === category.id" class="edit-form-overlay">
+          <form [formGroup]="editCategoryForm" (ngSubmit)="saveEditCategory()" class="edit-category-form">
+            <div class="edit-form-row">
+              <input 
+                type="text" 
+                formControlName="name"
+                class="edit-input"
+                [class.error]="editCategoryForm.get('name')?.invalid && editCategoryForm.get('name')?.touched"
+              />
+              
+              <input 
+                type="text" 
+                formControlName="icon"
+                class="edit-icon-input"
+                maxlength="2"
+              />
+              
+              <input 
+                type="color" 
+                formControlName="color"
+                class="edit-color-input"
+              />
+            </div>
+            
+            <div class="edit-form-actions">
+              <button type="submit" class="save-btn" [disabled]="editCategoryForm.invalid">
+                💾
+              </button>
+              <button type="button" (click)="cancelEdit()" class="cancel-btn">
+                ❌
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Información adicional -->
+  <div class="category-info-section">
+    <div class="info-card">
+      <h4>💡 Consejos</h4>
+      <ul>
+        <li>Arrastra y suelta las categorías para reordenarlas</li>
+        <li>Usa iconos y colores para identificar rápidamente tus categorías</li>
+        <li>Las categorías con tareas no se pueden eliminar</li>
+        <li>Busca categorías escribiendo en el campo de búsqueda</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+
