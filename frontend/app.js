@@ -608,7 +608,11 @@ function createTaskElement(task, section) {
         saveBtn.innerHTML = '💾';
         saveBtn.title = 'Guardar';
         saveBtn.className = 'save-btn';
+        let isSaving = false; // Bandera para evitar guardado múltiple
         const saveAction = async () => {
+          if (isSaving) return; // Evitar ejecución múltiple
+          isSaving = true;
+          
           const newText = textareaEdit.value.trim();
           if (newText) {
             await saveTask({ ...task, text: newText, categories: getCategoryIds(task) });
@@ -617,25 +621,40 @@ function createTaskElement(task, section) {
             // Si no hay texto, solo re-renderizar
             await renderTasks(currentFilter);
           }
+          
+          isSaving = false; // Resetear bandera
+          cleanup(); // Limpiar event listeners después de guardar
         };
-        saveBtn.addEventListener('click', saveAction);
-        textareaEdit.addEventListener('keydown', (e) => {
+        // Función para limpiar todos los event listeners
+        const cleanup = () => {
+          document.removeEventListener('mousedown', handleClickOutside);
+          textareaEdit.removeEventListener('keydown', handleKeydown);
+        };
+        
+        // Event listener para teclado
+        const handleKeydown = (e) => {
           // Enter guarda; Shift+Enter inserta salto de línea
           if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             saveAction();
           }
           if (e.key === 'Escape') {
-            renderTasks(currentFilter);
-          }
-        });
-        // Cancelar si se hace clic fuera del input o botón
-        const handleClickOutside = (event) => {
-          if (!info.contains(event.target)) {
-            document.removeEventListener('mousedown', handleClickOutside);
+            cleanup();
             renderTasks(currentFilter);
           }
         };
+        
+        // Cancelar si se hace clic fuera del input o botón
+        const handleClickOutside = (event) => {
+          if (!info.contains(event.target)) {
+            cleanup();
+            renderTasks(currentFilter);
+          }
+        };
+        
+        // Agregar event listeners
+        saveBtn.addEventListener('click', saveAction);
+        textareaEdit.addEventListener('keydown', handleKeydown);
         setTimeout(() => {
           document.addEventListener('mousedown', handleClickOutside);
         }, 0);
@@ -839,7 +858,37 @@ function renderCategoryList() {
       const saveBtn = document.createElement('button');
       saveBtn.textContent = 'Guardar';
       saveBtn.style.marginLeft = '5px';
+      let isSaving = false; // Bandera para evitar guardado múltiple
+      // Función para limpiar todos los event listeners
+      const cleanup = () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+        input.removeEventListener('keydown', handleKeydown);
+      };
+      
+      // Event listener para teclado
+      const handleKeydown = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          saveAction();
+        }
+        if (e.key === 'Escape') {
+          cleanup();
+          renderCategoryList();
+        }
+      };
+      
+      // Cancelar si se hace clic fuera del input o botón
+      const handleClickOutside = (event) => {
+        if (!li.contains(event.target)) {
+          cleanup();
+          renderCategoryList();
+        }
+      };
+      
       const saveAction = async () => {
+        if (isSaving) return; // Evitar ejecución múltiple
+        isSaving = true;
+        
         const newName = input.value.trim();
         if (newName && newName !== cat.name) {
           try {
@@ -855,24 +904,14 @@ function renderCategoryList() {
           // Si no cambia el nombre, solo re-renderizar la lista
           renderCategoryList();
         }
+        
+        isSaving = false; // Resetear bandera
+        cleanup(); // Limpiar event listeners después de guardar
       };
+      
+      // Agregar event listeners
       saveBtn.addEventListener('click', saveAction);
-      input.addEventListener('keydown', e => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          saveAction();
-        }
-        if (e.key === 'Escape') {
-          renderCategoryList();
-        }
-      });
-      // Cancelar si se hace clic fuera del input o botón
-      const handleClickOutside = (event) => {
-        if (!li.contains(event.target)) {
-          document.removeEventListener('mousedown', handleClickOutside);
-          renderCategoryList();
-        }
-      };
+      input.addEventListener('keydown', handleKeydown);
       setTimeout(() => {
         document.addEventListener('mousedown', handleClickOutside);
       }, 0);
