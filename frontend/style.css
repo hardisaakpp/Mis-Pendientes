@@ -126,6 +126,28 @@ textarea::placeholder {
   border-left: 3px solid #e53935;
 }
 
+/* --- CONTADORES DE TAREAS --- */
+.task-counter {
+  display: inline-block;
+  background: linear-gradient(135deg, #1976d2, #42a5f5);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-left: 8px;
+  min-width: 20px;
+  text-align: center;
+  line-height: 1.2;
+  box-shadow: 0 1px 4px rgba(25, 118, 210, 0.2);
+  transition: all 0.2s ease;
+}
+
+.task-counter.zero {
+  background: linear-gradient(135deg, #9ca3af, #d1d5db);
+  opacity: 0.7;
+}
+
 /* --- ESTILOS PARA PAPELERA FLOTANTE --- */
 .trash-icon {
   position: fixed;

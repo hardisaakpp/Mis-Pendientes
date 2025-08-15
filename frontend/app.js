@@ -252,6 +252,31 @@ async function renderTasks(filter = 'todas') {
     completedToggle.classList.remove('disabled');
     completedToggle.removeAttribute('disabled');
   }
+  
+  // Actualizar contadores de tareas
+  updateTaskCounters(pendingTasks.length, inProgressTasks.length, completedTasks.length);
+}
+
+// Función para actualizar los contadores de tareas en tiempo real
+function updateTaskCounters(pendingCount, inProgressCount, completedCount) {
+  const pendingCounter = document.getElementById('pending-counter');
+  const inProgressCounter = document.getElementById('in-progress-counter');
+  const completedCounter = document.getElementById('completed-counter');
+  
+  if (pendingCounter) {
+    pendingCounter.textContent = pendingCount;
+    pendingCounter.classList.toggle('zero', pendingCount === 0);
+  }
+  
+  if (inProgressCounter) {
+    inProgressCounter.textContent = inProgressCount;
+    inProgressCounter.classList.toggle('zero', inProgressCount === 0);
+  }
+  
+  if (completedCounter) {
+    completedCounter.textContent = completedCount;
+    completedCounter.classList.toggle('zero', completedCount === 0);
+  }
 }
 
 async function renderTrashTasks() {
