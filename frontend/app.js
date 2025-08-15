@@ -1,89 +1,16 @@
 // --- CONFIGURACIÓN API ---
-const API_URL = 'http://localhost:3001';
-
-// --- FUNCIONES API ---
-async function apiGet(path) {
-  const res = await fetch(`${API_URL}${path}`);
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
-}
-async function apiPost(path, data) {
-  const res = await fetch(`${API_URL}${path}` , {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
-}
-async function apiPut(path, data) {
-  const res = await fetch(`${API_URL}${path}` , {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
-}
-async function apiDelete(path) {
-  console.log('apiDelete llamado con path:', path);
-  console.log('URL completa:', `${API_URL}${path}`);
-  const res = await fetch(`${API_URL}${path}` , { method: 'DELETE' });
-  console.log('Respuesta del servidor:', res.status, res.statusText);
-  if (!res.ok) {
-    const errorText = await res.text();
-    console.error('Error en apiDelete:', errorText);
-    throw new Error(errorText);
-  }
-  const result = await res.json();
-  console.log('Resultado de apiDelete:', result);
-  return result;
-}
+// Las funciones API ahora están en js/services/api.service.js
 
 // --- FUNCIONES DE DATOS ---
-async function getTasks() {
-  return apiGet('/tasks');
-}
-async function saveTask(task) {
-  if (task.id) {
-    return apiPut(`/tasks/${task.id}`, task);
-  } else {
-    return apiPost('/tasks', task);
-  }
-}
-async function deleteTask(id) {
-  return apiDelete(`/tasks/${id}`);
-}
+// Las funciones de tareas ahora están en js/services/task.service.js
 
-// --- FUNCIONES DE PAPELERA DE RECICLAJE ---
-async function getDeletedTasks() {
-  return apiGet('/deleted-tasks');
-}
+// Las funciones de categorías ahora están en js/services/category.service.js
+// Nota: deleteCategory mantiene la lógica de cache local aquí por ahora
 
-async function restoreTask(id) {
-  return apiPost('/deleted-tasks/restore', { taskId: id });
-}
-
-async function permanentlyDeleteTask(id) {
-  return apiDelete(`/deleted-tasks/${id}`);
-}
-
-async function deleteAllDeletedTasks() {
-  console.log('deleteAllDeletedTasks llamado');
-  const result = await apiDelete('/deleted-tasks/empty');
-  console.log('deleteAllDeletedTasks resultado:', result);
-  return result;
-}
-
-async function getCategories() {
-  return apiGet('/categories');
-}
-async function saveCategory(name) {
-  return apiPost('/categories', { name });
-}
+// Función local que mantiene la lógica del cache
 async function deleteCategory(id) {
   try {
-    const result = await apiDelete(`/categories/${id}`);
+    const result = await window.deleteCategory(id);
     
     // Si la eliminación fue exitosa, actualizar el cache local
     if (result && !result.error) {
@@ -1219,11 +1146,7 @@ function renderCategoryList() {
   });
 }
 
-// Agregar función para editar categoría
-async function saveCategoryEdit(id, name) {
-  const res = await apiPut(`/categories/${id}`, { name });
-  if (res && res.error) throw new Error(res.error);
-}
+// La función saveCategoryEdit ahora está en js/services/category.service.js
 
 // --- MODAL DE CONFIRMACIÓN ---
 function showConfirmModal(message) {
