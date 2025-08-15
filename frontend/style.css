@@ -32,6 +32,66 @@ body {
 .category-item.dragging {
   cursor: grabbing !important;
 }
+
+/* Cursor de texto para campos de entrada */
+input[type="text"], 
+input[type="email"], 
+input[type="password"], 
+input[type="search"], 
+input[type="url"], 
+input[type="tel"], 
+input[type="number"],
+textarea,
+.edit-input,
+#task-input,
+#category-name-input {
+  cursor: text !important;
+}
+
+/* Cursor de texto para campos de entrada cuando están enfocados */
+input[type="text"]:focus, 
+input[type="email"]:focus, 
+input[type="password"]:focus, 
+input[type="search"]:focus, 
+input[type="url"]:focus, 
+input[type="tel"]:focus, 
+input[type="number"]:focus,
+textarea:focus,
+.edit-input:focus,
+#task-input:focus,
+#category-name-input:focus {
+  cursor: text !important;
+}
+
+/* Estilos adicionales para mejorar la experiencia de los campos de entrada */
+input[type="text"]::placeholder, 
+input[type="email"]::placeholder, 
+input[type="password"]::placeholder, 
+input[type="search"]::placeholder, 
+input[type="url"]::placeholder, 
+input[type="tel"]::placeholder, 
+input[type="number"]::placeholder,
+textarea::placeholder {
+  color: #9ca3af;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+/* Cursor de texto para elementos editables */
+[contenteditable="true"] {
+  cursor: text !important;
+}
+
+/* Cursor de texto para áreas de selección de texto */
+::selection {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+::-moz-selection {
+  background: #e3f2fd;
+  color: #1976d2;
+}
 /* Mejorar separación de secciones y visibilidad de iconos */
 .container-flex {
   display: flex;
@@ -518,6 +578,19 @@ h1 {
   border: 1.5px solid #1976d2;
   outline: none;
   box-shadow: 0 0 0 2px #e3f2fd;
+  cursor: text !important;
+}
+
+/* Estilos para inputs dinámicos de edición de categorías */
+.edit-input,
+input[type="text"] {
+  cursor: text !important;
+}
+
+/* Estilos para inputs dinámicos de edición de categorías */
+.edit-input:focus,
+input[type="text"]:focus {
+  cursor: text !important;
 }
 #category-name-input {
   width: 60%;
