@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil, firstValueFrom } from 'rxjs';
 import { DeletedTask } from '../../models/deleted-task.model';
 import { RecycleBinService } from '../../services/recycle-bin.service';
+import { Category } from '../../models/category.model';
+import { CategoryService } from '../../services/category.service';
 
 @Component({
   selector: 'app-recycle-bin',
@@ -41,9 +43,16 @@ export class RecycleBinComponent implements OnInit, OnDestroy {
   resizeStart = { x: 0, y: 0, width: 0, height: 0 };
   windowSize = { width: 500, height: 600 };
   
+  // Drag & Drop para categorías
+  isDraggingOverCategory = false;
+  draggedCategory: Category | null = null;
+  
   private destroy$ = new Subject<void>();
 
-  constructor(private recycleBinService: RecycleBinService) {}
+  constructor(
+    private recycleBinService: RecycleBinService,
+    private categoryService: CategoryService
+  ) {}
 
   ngOnInit(): void {
     this.loadDeletedTasks();
@@ -241,6 +250,82 @@ export class RecycleBinComponent implements OnInit, OnDestroy {
   onMouseUp(): void {
     this.isDragging = false;
     this.isResizing = false;
+  }
+
+  // Drag & Drop para categorías (nueva funcionalidad)
+  onDragOverCategory(event: DragEvent): void {
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'copy';
+      this.isDraggingOverCategory = true;
+    }
+  }
+
+  onDragLeaveCategory(event: DragEvent): void {
+    // Verificar si realmente salimos del área de la papelera
+    const target = event.relatedTarget as HTMLElement;
+    if (!target || !target.closest('.trash-icon, .recycle-bin-window')) {
+      this.isDraggingOverCategory = false;
+    }
+  }
+
+  onDropCategory(event: DragEvent): void {
+    event.preventDefault();
+    this.isDraggingOverCategory = false;
+    
+    // Obtener el ID de la categoría desde el dataTransfer
+    if (event.dataTransfer) {
+      const categoryId = event.dataTransfer.getData('text/plain');
+      if (categoryId) {
+        this.deleteCategoryById(parseInt(categoryId));
+      }
+    }
+  }
+
+  // Eliminar categoría por ID
+  private async deleteCategoryById(categoryId: number): Promise<void> {
+    try {
+      // Obtener información de la categoría antes de eliminar
+      const category = await firstValueFrom(this.categoryService.getCategoryById(categoryId));
+      
+      if (!category) {
+        this.errorMessage = 'Categoría no encontrada';
+        return;
+      }
+
+      // Verificar si la categoría tiene tareas
+      if (category.taskCount && category.taskCount > 0) {
+        this.errorMessage = `No se puede eliminar la categoría "${category.name}" porque tiene ${category.taskCount} tareas asociadas.`;
+        return;
+      }
+
+      // Confirmar eliminación
+      if (confirm(`¿Estás seguro de que quieres eliminar la categoría "${category.name}"?`)) {
+        await firstValueFrom(this.categoryService.deleteCategory(categoryId));
+        
+        // Mostrar mensaje de confirmación
+        this.showSuccessMessage(`Categoría "${category.name}" eliminada correctamente`);
+        
+        // Cerrar la papelera si está abierta
+        if (this.isOpen) {
+          this.closeRecycleBin();
+        }
+      }
+    } catch (error: any) {
+      this.errorMessage = 'Error al eliminar la categoría: ' + error.message;
+    }
+  }
+
+  // Mostrar mensaje de éxito
+  private showSuccessMessage(message: string): void {
+    // Por ahora usamos console.log, pero podrías implementar un sistema de notificaciones
+    console.log(message);
+    
+    // Opcional: Mostrar un mensaje temporal en la interfaz
+    this.errorMessage = message;
+    setTimeout(() => {
+      this.errorMessage = '';
+    }, 3000);
   }
 
   // Formatear fecha

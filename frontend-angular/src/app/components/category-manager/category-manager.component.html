@@ -3,6 +3,18 @@
   <div class="category-manager-header">
     <h2>📁 Gestión de Categorías</h2>
     <p>Organiza y personaliza las categorías de tus tareas</p>
+    
+    <!-- Indicador de drag and drop activo -->
+    <div *ngIf="draggedCategory && !isDraggingOverTrash" class="drag-indicator">
+      <span class="drag-text">🔄 Arrastrando "{{ draggedCategory.name }}"</span>
+      <span class="drag-hint">Suelta en otra categoría para reordenar o en la papelera para eliminar</span>
+    </div>
+    
+    <!-- Indicador cuando se arrastra sobre la papelera -->
+    <div *ngIf="isDraggingOverTrash" class="trash-drag-indicator">
+      <span class="trash-text">🗑️ Suelta para eliminar "{{ draggedCategory?.name }}"</span>
+      <span class="trash-hint">La categoría será eliminada permanentemente</span>
+    </div>
   </div>
 
   <!-- Mensaje de error -->
@@ -224,10 +236,59 @@
       <h4>💡 Consejos</h4>
       <ul>
         <li>Arrastra y suelta las categorías para reordenarlas</li>
+        <li><strong>🆕 Arrastra una categoría hacia el icono de la papelera para eliminarla</strong></li>
         <li>Usa iconos y colores para identificar rápidamente tus categorías</li>
         <li>Las categorías con tareas no se pueden eliminar</li>
         <li>Busca categorías escribiendo en el campo de búsqueda</li>
       </ul>
+    </div>
+    
+    <!-- Nueva tarjeta informativa sobre la funcionalidad de eliminación -->
+    <div class="info-card drag-drop-info">
+      <h4>🗑️ Eliminación por Drag & Drop</h4>
+      <div class="drag-drop-demo">
+        <div class="demo-category">
+          <span class="demo-icon">📋</span>
+          <span class="demo-name">Categoría de ejemplo</span>
+        </div>
+        <div class="demo-arrow">→</div>
+        <div class="demo-trash">🗑️</div>
+      </div>
+      <p>Arrastra cualquier categoría desde la lista hacia el icono de la papelera para eliminarla de forma rápida e intuitiva.</p>
+    </div>
+  </div>
+
+  <!-- Diálogo de confirmación de eliminación -->
+  <div *ngIf="showConfirmDialog" class="confirm-dialog-overlay" (click)="cancelDelete()">
+    <div class="confirm-dialog" (click)="$event.stopPropagation()">
+      <div class="confirm-header">
+        <span class="confirm-icon">⚠️</span>
+        <h3>Confirmar Eliminación</h3>
+      </div>
+      
+      <div class="confirm-content">
+        <p>{{ confirmMessage }}</p>
+        
+        <div class="confirm-category-info" *ngIf="categoryToDelete">
+          <div class="category-preview">
+            <div class="category-icon" [style.background-color]="getCategoryBackground(categoryToDelete)">
+              <span [style.color]="getContrastColor(getCategoryBackground(categoryToDelete))">
+                {{ categoryToDelete.icon || '📋' }}
+              </span>
+            </div>
+            <span class="category-name">{{ categoryToDelete.name }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="confirm-actions">
+        <button class="cancel-btn" (click)="cancelDelete()">
+          Cancelar
+        </button>
+        <button class="delete-btn" (click)="confirmDelete()">
+          Eliminar
+        </button>
+      </div>
     </div>
   </div>
 </div>

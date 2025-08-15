@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged, firstValueFrom } from 'rxjs';
@@ -27,6 +27,12 @@ export class CategoryManagerComponent implements OnInit, OnDestroy {
   
   // Drag & Drop
   draggedCategory: Category | null = null;
+  isDraggingOverTrash = false;
+  
+  // Sistema de notificaciones
+  showConfirmDialog = false;
+  categoryToDelete: Category | null = null;
+  confirmMessage = '';
   
   private destroy$ = new Subject<void>();
 
@@ -162,23 +168,31 @@ export class CategoryManagerComponent implements OnInit, OnDestroy {
 
   // Eliminar categoría
   async deleteCategory(category: Category): Promise<void> {
-    if (!confirm(`¿Estás seguro de que quieres eliminar la categoría "${category.name}"?`)) {
+    // Verificar si la categoría tiene tareas
+    if (category.taskCount && category.taskCount > 0) {
+      this.errorMessage = `No se puede eliminar la categoría "${category.name}" porque tiene ${category.taskCount} tareas asociadas.`;
       return;
     }
 
     try {
       await firstValueFrom(this.categoryService.deleteCategory(category.id));
-      this.errorMessage = '';
+      
+      // Mostrar mensaje de éxito
+      this.showSuccessMessage(`Categoría "${category.name}" eliminada correctamente`);
+      
+      // Recargar categorías
+      this.loadCategories();
     } catch (error: any) {
       this.errorMessage = 'Error al eliminar la categoría: ' + error.message;
     }
   }
 
-  // Drag & Drop
+  // Drag & Drop para reordenar categorías
   onDragStart(event: DragEvent, category: Category): void {
     this.draggedCategory = category;
     if (event.dataTransfer) {
       event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', category.id.toString());
     }
   }
 
@@ -201,6 +215,69 @@ export class CategoryManagerComponent implements OnInit, OnDestroy {
 
   onDragEnd(): void {
     this.draggedCategory = null;
+    this.isDraggingOverTrash = false;
+  }
+
+  // Drag & Drop para eliminar categorías (nueva funcionalidad)
+  onDragOverTrash(event: DragEvent): void {
+    event.preventDefault();
+    if (this.draggedCategory && event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'copy';
+      this.isDraggingOverTrash = true;
+    }
+  }
+
+  onDragLeaveTrash(event: DragEvent): void {
+    // Verificar si realmente salimos del área de la papelera
+    const target = event.relatedTarget as HTMLElement;
+    if (!target || !target.closest('.trash-icon')) {
+      this.isDraggingOverTrash = false;
+    }
+  }
+
+  onDropOnTrash(event: DragEvent): void {
+    event.preventDefault();
+    if (this.draggedCategory) {
+      // Verificar si la categoría tiene tareas antes de eliminar
+      if (this.draggedCategory.taskCount && this.draggedCategory.taskCount > 0) {
+        this.errorMessage = `No se puede eliminar la categoría "${this.draggedCategory.name}" porque tiene ${this.draggedCategory.taskCount} tareas asociadas.`;
+        this.draggedCategory = null;
+        this.isDraggingOverTrash = false;
+        return;
+      }
+      
+      // Mostrar diálogo de confirmación personalizado
+      this.showDeleteConfirmation(this.draggedCategory);
+      this.draggedCategory = null;
+      this.isDraggingOverTrash = false;
+    }
+  }
+
+  // Mostrar diálogo de confirmación de eliminación
+  private showDeleteConfirmation(category: Category): void {
+    this.categoryToDelete = category;
+    this.confirmMessage = `¿Estás seguro de que quieres eliminar la categoría "${category.name}"? Esta acción no se puede deshacer.`;
+    this.showConfirmDialog = true;
+  }
+
+  // Confirmar eliminación
+  confirmDelete(): void {
+    if (this.categoryToDelete) {
+      this.deleteCategory(this.categoryToDelete);
+      this.hideConfirmDialog();
+    }
+  }
+
+  // Cancelar eliminación
+  cancelDelete(): void {
+    this.hideConfirmDialog();
+  }
+
+  // Ocultar diálogo de confirmación
+  private hideConfirmDialog(): void {
+    this.showConfirmDialog = false;
+    this.categoryToDelete = null;
+    this.confirmMessage = '';
   }
 
   // Reordenar categorías
@@ -279,6 +356,18 @@ export class CategoryManagerComponent implements OnInit, OnDestroy {
   // TrackBy para optimizar el rendimiento de la lista
   trackByCategoryId(index: number, category: Category): number {
     return category.id;
+  }
+
+  // Método mejorado para eliminar categoría
+  private showSuccessMessage(message: string): void {
+    // Por ahora usamos console.log, pero podrías implementar un sistema de notificaciones
+    console.log(message);
+    
+    // Opcional: Mostrar un mensaje temporal en la interfaz
+    this.errorMessage = message;
+    setTimeout(() => {
+      this.errorMessage = '';
+    }, 3000);
   }
 }
 

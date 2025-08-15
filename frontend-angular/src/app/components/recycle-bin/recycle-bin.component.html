@@ -4,10 +4,19 @@
   (click)="toggleRecycleBin()"
   [class.active]="isOpen"
   [class.has-items]="stats.total > 0"
+  [class.drag-over]="isDraggingOverCategory"
   [title]="'Papelera de Reciclaje (' + stats.total + ' elementos)'"
+  (dragover)="onDragOverCategory($event)"
+  (dragleave)="onDragLeaveCategory($event)"
+  (drop)="onDropCategory($event)"
 >
   🗑️
   <span *ngIf="stats.total > 0" class="item-count">{{ stats.total > 99 ? '99+' : stats.total }}</span>
+  
+  <!-- Indicador visual cuando se arrastra una categoría -->
+  <div *ngIf="isDraggingOverCategory" class="drag-over-indicator">
+    <span class="drop-text">Soltar para eliminar</span>
+  </div>
 </div>
 
 <!-- Ventana de la papelera -->

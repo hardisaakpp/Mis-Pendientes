@@ -82,7 +82,19 @@ async function saveCategory(name) {
   return apiPost('/categories', { name });
 }
 async function deleteCategory(id) {
-  return apiDelete(`/categories/${id}`);
+  try {
+    const result = await apiDelete(`/categories/${id}`);
+    
+    // Si la eliminación fue exitosa, actualizar el cache local
+    if (result && !result.error) {
+      categoriesCache = categoriesCache.filter(cat => String(cat.id) !== String(id));
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('Error en deleteCategory:', error);
+    throw error;
+  }
 }
 
 // --- RENDERIZADO Y EVENTOS ASÍNCRONOS ---
@@ -440,6 +452,72 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Abrir ventana al hacer clic en el icono
   trashIcon.addEventListener('click', openTrashWindow);
+  
+  // Eventos de drag and drop para categorías
+  trashIcon.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    trashIcon.classList.add('drag-over');
+    showTrashDragIndicator('Suelta para eliminar la categoría');
+  });
+  
+  trashIcon.addEventListener('dragleave', (e) => {
+    // Verificar si realmente salimos del área de la papelera
+    const target = e.relatedTarget;
+    if (!target || !trashIcon.contains(target)) {
+      trashIcon.classList.remove('drag-over');
+      hideTrashDragIndicator();
+    }
+  });
+  
+  trashIcon.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    trashIcon.classList.remove('drag-over');
+    hideTrashDragIndicator();
+    
+    const categoryId = e.dataTransfer.getData('text/plain');
+    const categoryName = e.dataTransfer.getData('categoryName');
+    
+    if (categoryId && categoryName) {
+      // Mostrar confirmación antes de eliminar
+      const confirmed = await showConfirmModal(`¿Seguro que deseas eliminar la categoría "${categoryName}"? Esta acción no se puede deshacer.`);
+      
+      if (confirmed) {
+        try {
+          console.log('Eliminando categoría:', categoryId, categoryName);
+          console.log('Cache antes de eliminar:', categoriesCache);
+          
+          // Eliminar la categoría de la API
+          await deleteCategory(categoryId);
+          
+          console.log('Categoría eliminada de la API, actualizando cache...');
+          
+          // Actualizar el cache local de categorías
+          categoriesCache = categoriesCache.filter(cat => String(cat.id) !== String(categoryId));
+          
+          console.log('Cache después de eliminar:', categoriesCache);
+          
+          // Actualizar la interfaz
+          await renderCategories();
+          
+          // Si la lista de categorías está visible, actualizarla también
+          if (categoryList.style.display !== 'none') {
+            console.log('Actualizando lista de categorías visible...');
+            renderCategoryList();
+          }
+          
+          // Actualizar las tareas con el filtro actual
+          await renderTasks(currentFilter);
+          
+          // Mostrar mensaje de éxito
+          showSuccessMessage(`Categoría "${categoryName}" eliminada correctamente`);
+        } catch (error) {
+          console.error('Error al eliminar categoría:', error);
+          alert(`Error al eliminar la categoría: ${error.message || error}`);
+        }
+      }
+    }
+  });
   
   // Controles de la ventana
   if (closeBtn) {
@@ -828,9 +906,77 @@ categoryInput.addEventListener('keydown', function(e) {
   }
 });
 
+// --- FUNCIONES DE DRAG AND DROP PARA CATEGORÍAS ---
+function showDragIndicator(message) {
+  // Crear o actualizar el indicador de drag
+  let indicator = document.getElementById('drag-indicator');
+  if (!indicator) {
+    indicator = document.createElement('div');
+    indicator.id = 'drag-indicator';
+    indicator.className = 'drag-indicator';
+    document.body.appendChild(indicator);
+  }
+  indicator.textContent = message;
+  indicator.style.display = 'block';
+}
+
+function hideDragIndicator() {
+  const indicator = document.getElementById('drag-indicator');
+  if (indicator) {
+    indicator.style.display = 'none';
+  }
+}
+
+function showTrashDragIndicator(message) {
+  // Crear o actualizar el indicador de trash
+  let indicator = document.getElementById('trash-drag-indicator');
+  if (!indicator) {
+    indicator = document.createElement('div');
+    indicator.id = 'trash-drag-indicator';
+    indicator.className = 'trash-drag-indicator';
+    document.body.appendChild(indicator);
+  }
+  indicator.textContent = message;
+  indicator.style.display = 'block';
+}
+
+function hideTrashDragIndicator() {
+  const indicator = document.getElementById('trash-drag-indicator');
+  if (indicator) {
+    indicator.style.display = 'none';
+  }
+}
+
+function showSuccessMessage(message) {
+  // Crear notificación de éxito
+  const notification = document.createElement('div');
+  notification.className = 'success-notification';
+  notification.textContent = message;
+  
+  // Agregar al body
+  document.body.appendChild(notification);
+  
+  // Mostrar con animación
+  setTimeout(() => {
+    notification.classList.add('show');
+  }, 100);
+  
+  // Ocultar después de 3 segundos
+  setTimeout(() => {
+    notification.classList.remove('show');
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 300);
+  }, 3000);
+}
+
 // --- ADMINISTRAR CATEGORÍAS ---
 const manageBtn = document.getElementById('manage-categories-btn');
 const categoryList = document.getElementById('category-list');
+const debugCategoriesBtn = document.getElementById('debug-categories-btn');
+
 manageBtn.addEventListener('click', () => {
   if (categoryList.style.display === 'none') {
     renderCategoryList();
@@ -840,11 +986,42 @@ manageBtn.addEventListener('click', () => {
   }
 });
 
+// Botón de debug
+debugCategoriesBtn.addEventListener('click', () => {
+  debugCategories();
+  // También mostrar en la consola del navegador
+  console.log('Debug iniciado desde botón. Revisa la consola para más detalles.');
+});
+
 function renderCategoryList() {
+  console.log('renderCategoryList llamado con categoriesCache:', categoriesCache);
   categoryList.innerHTML = '';
   categoriesCache.forEach(cat => {
     const li = document.createElement('li');
     li.textContent = cat.name.charAt(0).toUpperCase() + cat.name.slice(1);
+    
+    // Hacer la categoría arrastrable
+    li.draggable = true;
+    li.dataset.categoryId = cat.id;
+    li.dataset.categoryName = cat.name;
+    li.className = 'category-item draggable';
+    
+    // Eventos de drag and drop
+    li.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('text/plain', cat.id);
+      e.dataTransfer.setData('categoryName', cat.name);
+      li.classList.add('dragging');
+      
+      // Mostrar indicador de drag activo
+      showDragIndicator(`Arrastrando categoría: ${cat.name}`);
+    });
+    
+    li.addEventListener('dragend', (e) => {
+      li.classList.remove('dragging');
+      hideDragIndicator();
+      hideTrashDragIndicator();
+    });
+    
     // Botón Editar
     const editBtn = document.createElement('button');
     editBtn.textContent = 'Editar';
@@ -1037,4 +1214,19 @@ document.addEventListener('DOMContentLoaded', () => {
 async function checkTrashStatus() {
   const deletedTasks = await getDeletedTasks();
   updateTrashIconIndicator(deletedTasks.length);
+} 
+
+// --- FUNCIONES DE DEBUG ---
+function debugCategories() {
+  console.log('=== DEBUG CATEGORÍAS ===');
+  console.log('categoriesCache:', categoriesCache);
+  console.log('categoryList visible:', categoryList.style.display !== 'none');
+  console.log('categoryList children:', categoryList.children.length);
+  console.log('=======================');
+}
+
+// Función para forzar la actualización de la lista de categorías
+function forceUpdateCategoryList() {
+  console.log('Forzando actualización de la lista de categorías...');
+  renderCategoryList();
 } 

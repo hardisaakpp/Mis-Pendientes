@@ -767,4 +767,204 @@ button, input[type="button"], input[type="submit"], .filters button, #category-l
     max-height: 45vh;
     overflow-y: auto;
   }
+}
+
+/* --- ESTILOS PARA DRAG AND DROP DE CATEGORÍAS --- */
+.category-item.draggable {
+  cursor: grab;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.category-item.draggable:active {
+  cursor: grabbing;
+}
+
+.category-item.dragging {
+  opacity: 0.6;
+  transform: rotate(2deg) scale(1.02);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+/* Indicadores de drag and drop */
+.drag-indicator,
+.trash-drag-indicator {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #1976d2, #42a5f5);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 4px 20px rgba(25, 118, 210, 0.3);
+  z-index: 10000;
+  display: none;
+  animation: slideDown 0.3s ease;
+}
+
+.trash-drag-indicator {
+  background: linear-gradient(135deg, #e53935, #f44336);
+  box-shadow: 0 4px 20px rgba(229, 57, 53, 0.3);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Estilos para la papelera cuando se arrastra una categoría */
+.trash-icon.drag-over {
+  background: linear-gradient(135deg, #ff1744, #d50000) !important;
+  transform: scale(1.15) !important;
+  box-shadow: 0 8px 30px rgba(255, 23, 68, 0.5) !important;
+  animation: pulse 1s infinite !important;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1.15); }
+  50% { transform: scale(1.25); }
+  100% { transform: scale(1.15); }
+}
+
+/* Notificaciones de éxito */
+.success-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, #4caf50, #66bb6a);
+  color: white;
+  padding: 16px 24px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 4px 20px rgba(76, 175, 80, 0.3);
+  z-index: 10001;
+  transform: translateX(400px);
+  transition: transform 0.3s ease;
+  max-width: 300px;
+  word-wrap: break-word;
+}
+
+.success-notification.show {
+  transform: translateX(0);
+}
+
+/* Mejoras en la lista de categorías */
+#category-list {
+  margin-top: 15px;
+  padding: 0;
+  list-style: none;
+}
+
+#category-list li {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.3s ease;
+}
+
+#category-list li:hover {
+  background: #e9ecef;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+#category-list li.dragging {
+  background: #e3f2fd;
+  border-color: #1976d2;
+  box-shadow: 0 4px 15px rgba(25, 118, 210, 0.2);
+}
+
+/* Mensaje informativo sobre drag and drop */
+.drag-drop-info {
+  background: linear-gradient(135deg, rgba(25, 118, 210, 0.1), rgba(66, 165, 245, 0.05));
+  border: 1px solid rgba(25, 118, 210, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px 0;
+  text-align: center;
+}
+
+.drag-drop-info p {
+  margin: 0;
+  color: #1976d2;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.drag-drop-info strong {
+  color: #1565c0;
+  font-weight: 600;
+}
+
+/* Botones de categorías */
+.edit-btn, .delete-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.edit-btn {
+  background: #ffc107;
+  color: #212529;
+}
+
+.edit-btn:hover {
+  background: #ffb300;
+  transform: scale(1.05);
+}
+
+.delete-btn {
+  background: #dc3545;
+  color: white;
+}
+
+.delete-btn:hover {
+  background: #c82333;
+  transform: scale(1.05);
+}
+
+/* Responsive para drag and drop */
+@media (max-width: 768px) {
+  .drag-indicator,
+  .trash-drag-indicator {
+    top: 10px;
+    left: 20px;
+    right: 20px;
+    transform: none;
+    text-align: center;
+    font-size: 13px;
+    padding: 10px 16px;
+  }
+  
+  .success-notification {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    transform: translateY(-100px);
+    max-width: none;
+  }
+  
+  .success-notification.show {
+    transform: translateY(0);
+  }
 } 

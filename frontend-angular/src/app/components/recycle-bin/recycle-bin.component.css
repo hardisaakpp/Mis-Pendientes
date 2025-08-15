@@ -1,13 +1,13 @@
 /* Recycle Bin Component Styles */
 
-/* Icono flotante de la papelera */
+/* Estilos para el icono de la papelera */
 .trash-icon {
   position: fixed;
   bottom: 30px;
   right: 30px;
   width: 60px;
   height: 60px;
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -15,54 +15,88 @@
   font-size: 24px;
   color: white;
   cursor: pointer;
-  box-shadow: var(--shadow-xl);
+  box-shadow: 0 4px 20px rgba(255, 107, 107, 0.3);
   transition: all 0.3s ease;
   z-index: 1000;
   user-select: none;
-  border: 3px solid rgba(255, 255, 255, 0.2);
+  overflow: hidden;
 }
 
 .trash-icon:hover {
-  transform: scale(1.1) rotate(5deg);
-  box-shadow: var(--shadow-2xl);
+  transform: scale(1.1);
+  box-shadow: 0 6px 25px rgba(255, 107, 107, 0.4);
 }
 
 .trash-icon.active {
-  background: linear-gradient(135deg, var(--danger-color), #dc2626);
-  transform: scale(1.1);
+  background: linear-gradient(135deg, #4ecdc4, #44a08d);
+  box-shadow: 0 4px 20px rgba(78, 205, 196, 0.3);
 }
 
 .trash-icon.has-items {
-  background: linear-gradient(135deg, var(--warning-color), #d97706);
-  animation: pulse 2s infinite;
+  background: linear-gradient(135deg, #ff9ff3, #f368e0);
+  box-shadow: 0 4px 20px rgba(255, 159, 243, 0.3);
 }
 
+/* Indicador visual cuando se arrastra una categoría */
+.trash-icon.drag-over {
+  background: linear-gradient(135deg, #ff4757, #c44569);
+  transform: scale(1.15);
+  box-shadow: 0 8px 30px rgba(255, 71, 87, 0.5);
+  animation: pulse 1s infinite;
+}
+
+.drag-over-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 71, 87, 0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.drop-text {
+  font-size: 10px;
+  color: white;
+  text-align: center;
+  font-weight: bold;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  line-height: 1.2;
+}
+
+/* Animaciones */
 @keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+  0% { transform: scale(1.15); }
+  50% { transform: scale(1.25); }
+  100% { transform: scale(1.15); }
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Contador de elementos */
 .item-count {
   position: absolute;
-  top: -8px;
-  right: -8px;
-  background: var(--danger-color);
+  top: -5px;
+  right: -5px;
+  background: #ff4757;
   color: white;
   border-radius: 50%;
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: bold;
   border: 2px solid white;
-  animation: bounce 1s infinite;
-}
-
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Ventana de la papelera */
