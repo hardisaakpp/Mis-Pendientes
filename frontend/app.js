@@ -1034,7 +1034,6 @@ function showSuccessMessage(message) {
 // --- ADMINISTRAR CATEGORÍAS ---
 const manageBtn = document.getElementById('manage-categories-btn');
 const categoryList = document.getElementById('category-list');
-const debugCategoriesBtn = document.getElementById('debug-categories-btn');
 
 manageBtn.addEventListener('click', () => {
   if (categoryList.style.display === 'none') {
@@ -1043,13 +1042,6 @@ manageBtn.addEventListener('click', () => {
   } else {
     categoryList.style.display = 'none';
   }
-});
-
-// Botón de debug
-debugCategoriesBtn.addEventListener('click', () => {
-  debugCategories();
-  // También mostrar en la consola del navegador
-  console.log('Debug iniciado desde botón. Revisa la consola para más detalles.');
 });
 
 function renderCategoryList() {
@@ -1277,17 +1269,4 @@ async function checkTrashStatus() {
   updateTrashIconIndicator(deletedTasks.length);
 } 
 
-// --- FUNCIONES DE DEBUG ---
-function debugCategories() {
-  console.log('=== DEBUG CATEGORÍAS ===');
-  console.log('categoriesCache:', categoriesCache);
-  console.log('categoryList visible:', categoryList.style.display !== 'none');
-  console.log('categoryList children:', categoryList.children.length);
-  console.log('=======================');
-}
-
-// Función para forzar la actualización de la lista de categorías
-function forceUpdateCategoryList() {
-  console.log('Forzando actualización de la lista de categorías...');
-  renderCategoryList();
-} 
+ 
