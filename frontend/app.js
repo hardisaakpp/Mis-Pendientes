@@ -88,6 +88,22 @@ async function deleteCategory(id) {
     // Si la eliminación fue exitosa, actualizar el cache local
     if (result && !result.error) {
       categoriesCache = categoriesCache.filter(cat => String(cat.id) !== String(id));
+      
+      // Si la categoría eliminada era el filtro actual, cambiar a 'todas'
+      if (String(currentFilter) === String(id)) {
+        currentFilter = 'todas';
+      }
+      
+      // Limpiar el orden personalizado de localStorage si contenía la categoría eliminada
+      const currentOrder = JSON.parse(localStorage.getItem('filtersOrder') || 'null');
+      if (currentOrder && currentOrder.includes(Number(id))) {
+        const newOrder = currentOrder.filter(catId => catId !== Number(id));
+        if (newOrder.length > 0) {
+          localStorage.setItem('filtersOrder', JSON.stringify(newOrder));
+        } else {
+          localStorage.removeItem('filtersOrder');
+        }
+      }
     }
     
     return result;
@@ -136,6 +152,7 @@ async function renderCategories() {
     // Drag & Drop events
     btn.addEventListener('dragstart', e => {
       e.dataTransfer.setData('text/plain', btnData.id);
+      e.dataTransfer.setData('categoryName', btnData.name);
       e.dataTransfer.effectAllowed = 'move';
       e.dataTransfer.dropEffect = 'move';
       btn.classList.add('dragging');
@@ -493,12 +510,7 @@ document.addEventListener('DOMContentLoaded', () => {
           // Eliminar la categoría de la API
           await deleteCategory(categoryId);
           
-          console.log('Categoría eliminada de la API, actualizando cache...');
-          
-          // Actualizar el cache local de categorías
-          categoriesCache = categoriesCache.filter(cat => String(cat.id) !== String(categoryId));
-          
-          console.log('Cache después de eliminar:', categoriesCache);
+          console.log('Categoría eliminada de la API, actualizando interfaz...');
           
           // Actualizar la interfaz
           await renderCategories();
@@ -509,8 +521,8 @@ document.addEventListener('DOMContentLoaded', () => {
             renderCategoryList();
           }
           
-          // Actualizar las tareas con el filtro actual
-          await renderTasks(currentFilter);
+          // Actualizar el filtro activo y las tareas
+          setActiveFilter(currentFilter);
           
           // Mostrar mensaje de éxito
           showSuccessMessage(`Categoría "${categoryName}" eliminada correctamente`);
