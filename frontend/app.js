@@ -219,38 +219,62 @@ async function renderTasks(filter = 'todas') {
 
   // Tareas pendientes
   const pendingTasks = tasks.filter(task => matchFilter(task) && !task.completed && !task.inProgress);
+  const pendingContainer = pendingToggle.closest('.completed-container');
+  
   if (pendingTasks.length === 0) {
     list.innerHTML = '<div class="empty-message">No hay tareas en esta sección</div>';
     pendingToggle.classList.add('disabled');
     pendingToggle.setAttribute('disabled', 'disabled');
+    if (pendingContainer) {
+      pendingContainer.classList.add('disabled');
+    }
   } else {
     pendingTasks.forEach(task => list.appendChild(createTaskElement(task, 'pending')));
     pendingToggle.classList.remove('disabled');
     pendingToggle.removeAttribute('disabled');
+    if (pendingContainer) {
+      pendingContainer.classList.remove('disabled');
+    }
   }
 
   // Tareas en progreso
   const inProgressTasks = tasks.filter(task => matchFilter(task) && task.inProgress && !task.completed);
+  const inProgressContainer = inProgressToggle.closest('.completed-container');
+  
   if (inProgressTasks.length === 0) {
     inProgressList.innerHTML = '<div class="empty-message">No hay tareas en esta sección</div>';
     inProgressToggle.classList.add('disabled');
     inProgressToggle.setAttribute('disabled', 'disabled');
+    if (inProgressContainer) {
+      inProgressContainer.classList.add('disabled');
+    }
   } else {
     inProgressTasks.forEach(task => inProgressList.appendChild(createTaskElement(task, 'inProgress')));
     inProgressToggle.classList.remove('disabled');
     inProgressToggle.removeAttribute('disabled');
+    if (inProgressContainer) {
+      inProgressContainer.classList.remove('disabled');
+    }
   }
 
   // Tareas completadas
   const completedTasks = tasks.filter(task => matchFilter(task) && task.completed);
+  const completedContainer = completedToggle.closest('.completed-container');
+  
   if (completedTasks.length === 0) {
     completedList.innerHTML = '<div class="empty-message">No hay tareas en esta sección</div>';
     completedToggle.classList.add('disabled');
     completedToggle.setAttribute('disabled', 'disabled');
+    if (completedContainer) {
+      completedContainer.classList.add('disabled');
+    }
   } else {
     completedTasks.forEach(task => completedList.appendChild(createTaskElement(task, 'completed')));
     completedToggle.classList.remove('disabled');
     completedToggle.removeAttribute('disabled');
+    if (completedContainer) {
+      completedContainer.classList.remove('disabled');
+    }
   }
   
   // Actualizar contadores de tareas
@@ -1271,12 +1295,30 @@ document.addEventListener('DOMContentLoaded', () => {
   toggles.forEach(toggle => {
     const targetId = toggle.getAttribute('data-target');
     const content = document.getElementById(targetId);
+    const container = toggle.closest('.completed-container');
+    
     // Por defecto, ABIERTO
     content.classList.add('open');
     toggle.classList.add('active');
+    if (container) {
+      container.classList.add('open');
+      container.classList.remove('closed');
+    }
+    
     toggle.addEventListener('click', () => {
       const isOpen = content.classList.toggle('open');
       toggle.classList.toggle('active', isOpen);
+      
+      // Actualizar clases del contenedor
+      if (container) {
+        if (isOpen) {
+          container.classList.add('open');
+          container.classList.remove('closed');
+        } else {
+          container.classList.remove('open');
+          container.classList.add('closed');
+        }
+      }
     });
   });
 });
