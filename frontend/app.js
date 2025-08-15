@@ -57,20 +57,20 @@ async function deleteTask(id) {
 
 // --- FUNCIONES DE PAPELERA DE RECICLAJE ---
 async function getDeletedTasks() {
-  return apiGet('/tasks/deleted');
+  return apiGet('/deleted-tasks');
 }
 
 async function restoreTask(id) {
-  return apiPost(`/tasks/${id}/restore`, {});
+  return apiPost('/deleted-tasks/restore', { taskId: id });
 }
 
 async function permanentlyDeleteTask(id) {
-  return apiDelete(`/tasks/${id}/permanent`);
+  return apiDelete(`/deleted-tasks/${id}`);
 }
 
 async function deleteAllDeletedTasks() {
   console.log('deleteAllDeletedTasks llamado');
-  const result = await apiDelete('/tasks/deleted/all');
+  const result = await apiDelete('/deleted-tasks/empty');
   console.log('deleteAllDeletedTasks resultado:', result);
   return result;
 }
@@ -136,6 +136,8 @@ async function renderCategories() {
     // Drag & Drop events
     btn.addEventListener('dragstart', e => {
       e.dataTransfer.setData('text/plain', btnData.id);
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.dropEffect = 'move';
       btn.classList.add('dragging');
     });
     btn.addEventListener('dragend', e => {
@@ -143,6 +145,7 @@ async function renderCategories() {
     });
     btn.addEventListener('dragover', e => {
       e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
       btn.classList.add('drag-over');
     });
     btn.addEventListener('dragleave', e => {
@@ -456,7 +459,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Eventos de drag and drop para categorías
   trashIcon.addEventListener('dragover', (e) => {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'copy';
+    e.dataTransfer.dropEffect = 'move';
     trashIcon.classList.add('drag-over');
     showTrashDragIndicator('Suelta para eliminar la categoría');
   });
@@ -529,6 +532,40 @@ document.addEventListener('DOMContentLoaded', () => {
   // El evento del botón delete-all-trash se agregará cuando se abra la ventana
   console.log('Ventana de papelera inicializada');
   
+  // Configurar dragover en áreas principales para evitar cursor de "prohibido"
+  const container = document.querySelector('.container');
+  const taskList = document.getElementById('task-list');
+  const completedList = document.getElementById('completed-task-list');
+  const inProgressList = document.getElementById('in-progress-task-list');
+  
+  if (container) {
+    container.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    });
+  }
+  
+  if (taskList) {
+    taskList.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    });
+  }
+  
+  if (completedList) {
+    completedList.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    });
+  }
+  
+  if (inProgressList) {
+    inProgressList.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    });
+  }
+  
   // Cerrar ventana con Escape
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && isTrashWindowOpen) {
@@ -540,6 +577,16 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('click', (e) => {
     const trashWindow = document.getElementById('trash-window');
     const trashIcon = document.getElementById('trash-icon');
+    
+  // Configurar dragover global para evitar cursor de "prohibido"
+  document.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  });
+  
+  document.addEventListener('drop', (e) => {
+    e.preventDefault();
+  });
     
     if (isTrashWindowOpen && 
         !trashWindow.contains(e.target) && 
@@ -1010,6 +1057,8 @@ function renderCategoryList() {
     li.addEventListener('dragstart', (e) => {
       e.dataTransfer.setData('text/plain', cat.id);
       e.dataTransfer.setData('categoryName', cat.name);
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.dropEffect = 'move';
       li.classList.add('dragging');
       
       // Mostrar indicador de drag activo

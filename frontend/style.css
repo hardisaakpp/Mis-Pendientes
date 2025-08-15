@@ -5,6 +5,33 @@ body {
   padding: 0;
   color: #222;
 }
+
+/* Estilos globales para drag and drop */
+* {
+  cursor: default;
+}
+
+*[draggable="true"] {
+  cursor: grab !important;
+}
+
+*[draggable="true"]:active {
+  cursor: grabbing !important;
+}
+
+/* Asegurar que el cursor se mantenga durante el arrastre */
+*[draggable="true"].dragging {
+  cursor: grabbing !important;
+}
+
+/* Forzar cursor durante el arrastre en elementos específicos */
+.filters button.dragging {
+  cursor: grabbing !important;
+}
+
+.category-item.dragging {
+  cursor: grabbing !important;
+}
 /* Mejorar separación de secciones y visibilidad de iconos */
 .container-flex {
   display: flex;
@@ -341,12 +368,13 @@ h1 {
   background: #e3f2fd;
   color: #1976d2;
   font-weight: 500;
-  cursor: grab;
+  cursor: grab !important;
   transition: background 0.2s, color 0.2s;
   font-size: 1rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  user-select: none;
 }
 .filters button.active, .filters button:hover {
   background: #1976d2;
@@ -355,6 +383,14 @@ h1 {
 .filters button.dragging {
   cursor: grabbing !important;
   opacity: 0.7;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+}
+
+.filters button.drag-over {
+  background: #bbdefb;
+  border: 2px dashed #1976d2;
+  transform: scale(1.02);
 }
 #task-list, #completed-task-list, #in-progress-task-list {
   list-style: none;
@@ -785,6 +821,7 @@ button, input[type="button"], input[type="submit"], .filters button, #category-l
   transform: rotate(2deg) scale(1.02);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
   z-index: 10;
+  cursor: grabbing !important;
 }
 
 /* Indicadores de drag and drop */
@@ -828,6 +865,7 @@ button, input[type="button"], input[type="submit"], .filters button, #category-l
   transform: scale(1.15) !important;
   box-shadow: 0 8px 30px rgba(255, 23, 68, 0.5) !important;
   animation: pulse 1s infinite !important;
+  cursor: grabbing !important;
 }
 
 @keyframes pulse {
