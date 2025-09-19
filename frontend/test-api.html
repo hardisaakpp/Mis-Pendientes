@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API</title>
+</head>
+<body>
+    <h1>Test API</h1>
+    <button onclick="testDeleteAll()">Test Delete All Deleted Tasks</button>
+    <div id="result"></div>
+
+    <!-- Servicios API -->
+    <script src="js/services/api.service.js"></script>
+    <script src="js/services/task.service.js"></script>
+    
+    <script>
+        async function testDeleteAll() {
+            const resultDiv = document.getElementById('result');
+            try {
+                resultDiv.innerHTML = 'Probando...';
+                console.log('Iniciando prueba...');
+                
+                const result = await window.deleteAllDeletedTasks();
+                console.log('Resultado:', result);
+                resultDiv.innerHTML = `Éxito: ${JSON.stringify(result)}`;
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
+

@@ -29,18 +29,32 @@ async function apiPut(path, data) {
 }
 
 async function apiDelete(path) {
-  console.log('apiDelete llamado con path:', path);
+  console.log('=== INICIO apiDelete ===');
+  console.log('Path recibido:', path);
   console.log('URL completa:', `${API_URL}${path}`);
-  const res = await fetch(`${API_URL}${path}` , { method: 'DELETE' });
-  console.log('Respuesta del servidor:', res.status, res.statusText);
-  if (!res.ok) {
-    const errorText = await res.text();
-    console.error('Error en apiDelete:', errorText);
-    throw new Error(errorText);
+  
+  try {
+    console.log('Ejecutando fetch DELETE...');
+    const res = await fetch(`${API_URL}${path}` , { method: 'DELETE' });
+    console.log('Respuesta del servidor:', res.status, res.statusText);
+    
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('Error HTTP en apiDelete:', errorText);
+      throw new Error(errorText);
+    }
+    
+    console.log('Respuesta exitosa, parseando JSON...');
+    const result = await res.json();
+    console.log('Resultado parseado:', result);
+    console.log('=== FIN apiDelete - ÉXITO ===');
+    return result;
+  } catch (error) {
+    console.error('=== ERROR en apiDelete ===');
+    console.error('Error completo:', error);
+    console.error('Stack trace:', error.stack);
+    throw error;
   }
-  const result = await res.json();
-  console.log('Resultado de apiDelete:', result);
-  return result;
 }
 
 // Exportar funciones para uso global (mantener compatibilidad)

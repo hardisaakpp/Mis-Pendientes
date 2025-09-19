@@ -585,20 +585,36 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function deleteAllTrashTasks() {
-  console.log('Función deleteAllTrashTasks ejecutada');
-  const confirmed = await showConfirmModal('¿Seguro que deseas eliminar permanentemente todas las tareas de la papelera? Esta acción no se puede deshacer.');
-  console.log('Usuario confirmó:', confirmed);
-  if (confirmed) {
-    try {
-      console.log('Intentando eliminar todas las tareas...');
-      const result = await deleteAllDeletedTasks();
-      console.log('Tareas eliminadas:', result);
-      await renderTrashTasks(); // Esto también actualizará el estado del botón
-      await checkTrashStatus(); // Actualizar indicador del icono
-    } catch (error) {
-      console.error('Error al eliminar todas las tareas:', error);
-      alert(`Error al eliminar las tareas: ${error.message || error}. Por favor, intenta de nuevo.`);
+  console.log('=== INICIO deleteAllTrashTasks ===');
+  try {
+    const confirmed = await showConfirmModal('¿Seguro que deseas eliminar permanentemente todas las tareas de la papelera? Esta acción no se puede deshacer.');
+    console.log('Usuario confirmó:', confirmed);
+    
+    if (confirmed) {
+      console.log('Usuario confirmó, procediendo a eliminar...');
+      console.log('Verificando que window.deleteAllDeletedTasks existe:', typeof window.deleteAllDeletedTasks);
+      
+      if (typeof window.deleteAllDeletedTasks !== 'function') {
+        throw new Error('La función deleteAllDeletedTasks no está disponible');
+      }
+      
+      console.log('Llamando a window.deleteAllDeletedTasks()...');
+      const result = await window.deleteAllDeletedTasks();
+      console.log('Resultado de deleteAllDeletedTasks:', result);
+      
+      console.log('Actualizando interfaz...');
+      await renderTrashTasks();
+      await checkTrashStatus();
+      
+      console.log('=== FIN deleteAllTrashTasks - ÉXITO ===');
+    } else {
+      console.log('Usuario canceló la operación');
     }
+  } catch (error) {
+    console.error('=== ERROR en deleteAllTrashTasks ===');
+    console.error('Error completo:', error);
+    console.error('Stack trace:', error.stack);
+    alert(`Error al eliminar las tareas: ${error.message || error}. Por favor, intenta de nuevo.`);
   }
 }
 

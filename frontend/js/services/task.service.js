@@ -29,10 +29,19 @@ async function permanentlyDeleteTask(id) {
 }
 
 async function deleteAllDeletedTasks() {
-  console.log('deleteAllDeletedTasks llamado');
-  const result = await window.apiDelete('/deleted-tasks/empty');
-  console.log('deleteAllDeletedTasks resultado:', result);
-  return result;
+  console.log('=== INICIO deleteAllDeletedTasks en servicio ===');
+  try {
+    console.log('Llamando a window.apiDelete con /deleted-tasks/empty');
+    const result = await window.apiDelete('/deleted-tasks/empty');
+    console.log('Resultado de apiDelete:', result);
+    console.log('=== FIN deleteAllDeletedTasks en servicio - ÉXITO ===');
+    return result;
+  } catch (error) {
+    console.error('=== ERROR en deleteAllDeletedTasks en servicio ===');
+    console.error('Error completo:', error);
+    console.error('Stack trace:', error.stack);
+    throw error;
+  }
 }
 
 // Exportar funciones para uso global (mantener compatibilidad)
